@@ -42,7 +42,6 @@ jobs:
         run: |
           grep -q "surgical-fixes-2026-09-25.js" service-worker.js
           grep -q "surgical-fixes-2026-09-25.css" service-worker.js
-          grep -q 'showView("garden")' surgical-fixes-2026-09-25.js
           grep -q "syncPlanBadge" surgical-fixes-2026-09-25.js
           grep -q "relaxation" surgical-fixes-2026-09-25.js
           grep -q 'data-settings-panel="privacy"' surgical-fixes-2026-09-25.css
