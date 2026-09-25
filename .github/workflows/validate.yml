@@ -22,7 +22,6 @@ jobs:
           node --check batch-2026-09-25.js
           node --check subscription-switch-fix.js
           node --check surgical-fixes-2026-09-25.js
-          node --check checkin-hotfix.js
           node --check service-worker.js
 
       - name: Check required files
@@ -34,7 +33,6 @@ jobs:
           test -f surgical-fixes-2026-09-25.css
           test -f app.js
           test -f surgical-fixes-2026-09-25.js
-          test -f checkin-hotfix.js
           test -f manifest.webmanifest
           test -f service-worker.js
           test -f privacy.html
@@ -54,15 +52,16 @@ jobs:
           grep -q "#returnMessage:empty" surgical-fixes-2026-09-25.css
           grep -q "grid-template-columns:repeat(2,minmax(0,1fr))" surgical-fixes-2026-09-25.css
 
-      - name: Verify check-in watering handoff
+      - name: Verify Garden retirement
         run: |
-          grep -q 'checkin-hotfix.js' index.html
-          grep -q 'isFirstCheckinForDate' checkin-hotfix.js
-          grep -q 'state.ui.pendingGardenGrowth = isFirstCheckinForDate' checkin-hotfix.js
-          grep -q 'isFirstCheckinForDate' surgical-fixes-2026-09-25.js
-          grep -q 'state.ui.pendingGardenGrowth = isFirstCheckinForDate' surgical-fixes-2026-09-25.js
-          grep -q 'showView("garden")' surgical-fixes-2026-09-25.js
-          grep -q 'already cared for today' surgical-fixes-2026-09-25.js
+          ! grep -q 'id="view-garden"' index.html
+          ! grep -q 'data-view="garden"' index.html
+          ! grep -q 'data-go="garden"' index.html
+          ! grep -q 'Vune Garden' index.html
+          ! grep -q 'Cycle Garden' index.html
+          ! grep -q 'watering your plant' surgical-fixes-2026-09-25.js
+          grep -q 'Cycle Calendar' index.html
+          grep -q 'Future product ideas' README.md
 
       - name: Verify saved check-in navigation
         run: |
