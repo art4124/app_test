@@ -1569,9 +1569,27 @@ selectPlan = vuneSetBetaPlan;
       const symptomValues = getSymptomCounts();
       const moodValues = getMoodCounts();
       const cycles = getCycleLengths();
-      if(symptomValues.length >= 3) vuneAddSeeMore(safe("symptomChart") && safe("symptomChart").parentElement,"body");
-      if(moodValues.length >= 3) vuneAddSeeMore(safe("moodChart") && safe("moodChart").parentElement,"feelings");
-      if(cycles.length >= 3) vuneAddSeeMore(history && history.parentElement,"cycle");
+
+      const bodyCard = safe("symptomChart") && safe("symptomChart").parentElement;
+      const feelingsCard = safe("moodChart") && safe("moodChart").parentElement;
+      const cycleCard = history && history.parentElement;
+
+      if(bodyCard && symptomValues.length < 3){
+        const stale = bodyCard.querySelector('[data-pattern-more="body"]');
+        if(stale) stale.remove();
+      }
+      if(feelingsCard && moodValues.length < 3){
+        const stale = feelingsCard.querySelector('[data-pattern-more="feelings"]');
+        if(stale) stale.remove();
+      }
+      if(cycleCard && cycles.length < 3){
+        const stale = cycleCard.querySelector('[data-pattern-more="cycle"]');
+        if(stale) stale.remove();
+      }
+
+      if(symptomValues.length >= 3) vuneAddSeeMore(bodyCard,"body");
+      if(moodValues.length >= 3) vuneAddSeeMore(feelingsCard,"feelings");
+      if(cycles.length >= 3) vuneAddSeeMore(cycleCard,"cycle");
     }
   };
 
