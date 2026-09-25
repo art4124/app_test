@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'">
+  <title>Vune Prototype Privacy Notes</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main style="max-width:780px;margin:0 auto;padding:42px 20px 80px">
+    <a class="text-link" href="./">← Back to Vune</a>
+    <div class="brand-lockup" style="margin:28px 0">
+      <span class="brand-mark">V</span>
+      <div><h1>Vune</h1><p>Prototype privacy notes</p></div>
+    </div>
+    <article class="card">
+      <span class="eyebrow">Testing build</span>
+      <h2>Use fictional information in this web prototype.</h2>
+      <p>This build exists to test product flows before the native iOS version. It is not the final production security architecture and should not be treated as a medical record system.</p>
+      <h3>What this prototype does</h3>
+      <ul class="clean-list">
+        <li>Stores Vune state only in the current browser.</li>
+        <li>Encrypts that local state with AES-GCM using a key derived from the passcode you enter.</li>
+        <li>Uses no advertising SDKs, analytics SDKs, cloud database, or external AI API.</li>
+        <li>Does not require an account, email address, phone number, or name.</li>
+        <li>Supports encrypted backup export and local restoration.</li>
+        <li>Hides the interface when the browser tab becomes hidden.</li>
+      </ul>
+      <h3>Important prototype limitations</h3>
+      <ul class="clean-list">
+        <li>Browser storage and browser passcode handling are not a substitute for iOS Keychain, Secure Enclave, or native device protections.</li>
+        <li>Browser extensions, compromised devices, malicious browser software, or future code changes can create risks that encryption at rest alone cannot prevent.</li>
+        <li>The Assistant in this build is a local rule-based UX prototype. It is not the planned native on-device AI implementation.</li>
+        <li>No browser application should promise absolute security.</li>
+      </ul>
+      <h3>Data deletion</h3>
+      <p>Settings → Delete all Vune data removes the Vune encrypted vault and salt from this browser's local storage. Exported backup files are controlled by you and must be deleted separately if you no longer want them.</p>
+      <h3>Before TestFlight</h3>
+      <p>The iOS build will replace browser-specific protections with native secure storage, platform authentication, native database protections, and the final Vune privacy/security review.</p>
+    </article>
+  </main>
+</body>
+</html>
