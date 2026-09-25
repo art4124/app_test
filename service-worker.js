@@ -1,6 +1,6 @@
 "use strict";
 
-const CACHE = "vune-web-v12-surgical-fixes";
+const CACHE = "vune-web-v13-privacy-companion-plan";
 const APP_SHELL = [
   "./",
   "./index.html",
