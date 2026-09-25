@@ -84,3 +84,11 @@ jobs:
           grep -q '/ month' index.html
           ! grep -q '/ year' app.js
           ! grep -q '/ year' index.html
+
+      - name: Verify theme coverage and check-in confirmation
+        run: |
+          grep -q 'journal-binding' surgical-fixes-2026-09-25.css
+          grep -q 'journal-pages .journal-entry:before' surgical-fixes-2026-09-25.css
+          grep -q 'checkin-save-confirmation' surgical-fixes-2026-09-25.css
+          grep -q '✓ Check-in saved successfully' surgical-fixes-2026-09-25.js
+          grep -q 'aria-live' surgical-fixes-2026-09-25.js
