@@ -1,6 +1,6 @@
 "use strict";
 
-const CACHE = "vune-web-v22-layout-overflow-repair";
+const CACHE = "vune-web-v23-layout-cleanup";
 const APP_SHELL = [
   "./",
   "./index.html",
