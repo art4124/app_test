@@ -5,11 +5,11 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#8b68b6">
   <meta name="description" content="Vune privacy-first period tracker web prototype">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; font-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none'; font-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
   <title>Vune — Period Tracker</title>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="vune.css">
 </head>
 <body>
   <div id="privacyCurtain" class="privacy-curtain" aria-hidden="true">
@@ -371,27 +371,27 @@
               <div class="plan-grid subscription-list" id="planGrid">
                 <button class="plan-card subscription-option" data-plan="free">
                   <span class="subscription-top"><strong>Free</strong><span class="subscription-price">$0</span></span>
-                  <span class="subscription-features"><span>✓ Cycle tracking</span><span>✓ Daily check-ins</span><span>✓ Calendar history</span><span>✓ Basic forecast</span></span>
+                  <span class="subscription-features"><span>✓ Cycle tracking</span><span>✓ Daily check-ins</span><span>✓ Calendar history</span><span>✓ Local encrypted vault</span></span>
                 </button>
 
                 <button class="plan-card subscription-option" data-plan="essential">
                   <span class="subscription-top"><strong>Essential</strong><span class="subscription-price">$4.99 <small>/ month</small></span></span>
-                  <span class="subscription-features"><span>✓ Free features</span><span>✓ More history</span><span>✓ Detailed tracking</span><span>✓ Custom reminders</span></span>
+                  <span class="subscription-features"><span>✓ Free features</span><span>✓ Period prediction</span><span>✓ Pattern summaries</span><span>✓ Cycle analytics</span></span>
                 </button>
 
                 <button class="plan-card subscription-option" data-plan="plus">
                   <span class="subscription-top"><strong>Plus</strong><span class="subscription-price">$12.99 <small>/ month</small></span></span>
-                  <span class="subscription-features"><span>✓ Essential features</span><span>✓ Deeper patterns</span><span>✓ Custom tags</span><span>✓ Personalization</span></span>
+                  <span class="subscription-features"><span>✓ Essential features</span><span>✓ Bloom Notes journal</span><span>✓ Journal calendar markers</span><span>✓ Journal history</span></span>
                 </button>
 
                 <button class="plan-card subscription-option" data-plan="complete">
                   <span class="subscription-top"><strong>Complete</strong><span class="subscription-price">$24.99 <small>/ month</small></span></span>
-                  <span class="subscription-features"><span>✓ Plus features</span><span>✓ Full analytics</span><span>✓ Encrypted sync tools</span><span>✓ Advanced dashboards</span></span>
+                  <span class="subscription-features"><span>✓ Plus features</span><span>✓ Advanced pattern details</span><span>✓ Expanded cycle history</span><span>✓ Deeper trend review</span></span>
                 </button>
 
                 <button class="plan-card subscription-option supporter-plan" data-plan="supporter">
                   <span class="subscription-top"><span><strong>Supporter ✦</strong><em class="recommended-tag">Full experience</em></span><span class="subscription-price">$32.99 <small>/ month</small></span></span>
-                  <span class="subscription-features"><span>✓ Complete features</span><span>✓ Vune Companion</span><span>✓ Appointment prep</span><span>✓ Health Summary</span></span>
+                  <span class="subscription-features"><span>✓ Complete features</span><span>✓ Vune Companion</span><span>✓ Appointment prep</span><span>✓ Doctor-ready Health Summary</span></span>
                 </button>
               </div>
             </section>
@@ -462,6 +462,7 @@
       <button class="nav-btn active" data-view="today"><span>☀</span><small>Today</small></button>
       <button class="nav-btn" data-view="calendar"><span>◔</span><small>Cycle</small></button>
       <button class="nav-btn" data-view="journal"><span>♡</span><small>Notes</small></button>
+      <button class="nav-btn" data-view="insights"><span>〰</span><small>Patterns</small></button>
       <button class="nav-btn" data-view="settings"><span>⚙</span><small>More</small></button>
     </nav>
 
@@ -523,6 +524,6 @@
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
-  <script src="app.js" defer></script>
+  <script src="vune-runtime.js" defer></script>
 </body>
 </html>
