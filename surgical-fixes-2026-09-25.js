@@ -92,9 +92,8 @@
   vuneSelectBetaPlan = setBetaPlanAndSync;
   selectPlan = setBetaPlanAndSync;
 
-  /* A completed NEW daily check-in saves first, then opens Garden so the existing
-     one-time watering/growth animation can consume pendingGardenGrowth immediately.
-     Editing an existing date never earns a duplicate watering. */
+  /* Garden is retired from the current beta. Daily check-ins now save normally
+     without routing away from the page or triggering a care animation. */
   saveCheckin = async function(ev){
     if(ev && typeof ev.preventDefault === "function") ev.preventDefault();
     if(!state) return;
@@ -108,12 +107,11 @@
 
     if(!(period || flow !== "none" || mood || symptoms.length || reflection)){
       if(safe("checkinRequirement")) safe("checkinRequirement").hidden = false;
-      showToast("Add at least one feeling, symptom, cycle detail, or note before watering your plant. 🌱");
+      showToast("Add at least one feeling, symptom, cycle detail, or note before saving your check-in.");
       return;
     }
 
     if(safe("checkinRequirement")) safe("checkinRequirement").hidden = true;
-    const isFirstCheckinForDate = !Object.prototype.hasOwnProperty.call(state.entries, date);
 
     state.entries[date] = {
       date: date,
@@ -125,22 +123,13 @@
       updatedAt: new Date().toISOString()
     };
 
-    /* The care ritual is unique to the first saved check-in for a calendar day.
-       Later saves on that same date update the encrypted daily entry without
-       replaying watering or adding another care day. */
-    state.ui.pendingGardenGrowth = isFirstCheckinForDate;
+    if(state.ui) state.ui.pendingGardenGrowth = false;
 
     await persistState();
     renderAll();
     safe("checkinDate").value = date;
     loadCheckinForDate(date);
-
-    if(isFirstCheckinForDate){
-      showToast("First check-in saved — watering your plant. 🌱💧");
-      showView("garden");
-    } else {
-      showToast("Check-in updated and saved. Your plant was already cared for today. 💜");
-    }
+    showToast("Check-in saved. 💜");
   };
 
   /* Keep the local prototype conversational for general wellness prompts while
