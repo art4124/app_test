@@ -1,0 +1,17 @@
+{
+  "name": "Vune — Period Tracker",
+  "short_name": "Vune",
+  "description": "Privacy-first period tracker web prototype",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f7f3fb",
+  "theme_color": "#6f4a9e",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
