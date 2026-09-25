@@ -6,16 +6,17 @@ A privacy-first, local-only web prototype for testing the Vune period tracker be
 
 - Encrypted local vault using Web Crypto (AES-GCM + PBKDF2-derived key)
 - Passcode lock and inactivity auto-lock
-- Privacy curtain when the tab is hidden
+- Privacy curtain when the tab is hidden, with optional immediate background lock
 - Daily period / flow / mood / symptom check-ins
+- Multiple check-ins on the same date with individual history
 - Local cycle-length calculations and next-period estimate
 - Calendar history and predicted dates
 - Encrypted journal
 - Local insights for cycles, symptoms, and moods
 - Supporter-plan simulation
 - Local Vune Assistant UX prototype (rule-based, no network calls)
-- Local clinician-friendly Vune Health Summary with Print / Save as PDF
-- Encrypted backup export/import
+- Supporter Health Summary with Print / Save as PDF
+- Encrypted Recovery Key backup and local restoration
 - Plan-preview controls for Free, Essential, Plus, Complete, and Supporter
 - Offline-capable PWA app shell
 - No ad SDKs, analytics SDKs, external AI calls, or health-data backend
