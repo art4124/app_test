@@ -3,9 +3,11 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; object-src 'none'; base-uri 'none'">
   <title>Vune Prototype Privacy Notes</title>
-  <link rel="stylesheet" href="styles.css">
+  <meta name="theme-color" content="#9b7fbd">
+  <link rel="stylesheet" href="vune.css">
+  <script src="public-theme.js" defer></script>
 </head>
 <body>
   <main style="max-width:780px;margin:0 auto;padding:42px 20px 80px">
@@ -24,7 +26,7 @@
         <li>Encrypts that local state with AES-GCM using a key derived from the passcode you enter.</li>
         <li>Uses no advertising SDKs, analytics SDKs, cloud database, or external AI API.</li>
         <li>Does not require an account, email address, phone number, or name.</li>
-        <li>Supports encrypted backup export and local restoration.</li>
+        <li>Maintains an encrypted Recovery Key backup in this browser for local restoration.</li>
         <li>Hides the interface when the browser tab becomes hidden.</li>
       </ul>
       <h3>Important prototype limitations</h3>
@@ -35,7 +37,7 @@
         <li>No browser application should promise absolute security.</li>
       </ul>
       <h3>Data deletion</h3>
-      <p>Settings → Delete all Vune data removes the Vune encrypted vault and salt from this browser's local storage. Exported backup files are controlled by you and must be deleted separately if you no longer want them.</p>
+      <p>Deleting the active browser copy resets Vune but keeps its encrypted Recovery Key backup so the vault can be restored during testing. Vune also provides a separate permanent-delete control that removes both the active vault and the local recovery backup.</p>
       <h3>Before TestFlight</h3>
       <p>The iOS build will replace browser-specific protections with native secure storage, platform authentication, native database protections, and the final Vune privacy/security review.</p>
     </article>
