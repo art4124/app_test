@@ -387,80 +387,112 @@
       </section>
 
       <section class="view" id="view-settings">
-        <div class="page-heading">
-          <div><span class="eyebrow">Make Vune feel like yours</span><h2>Privacy & Comfort</h2><p class="muted">Your plan, security, backups, and privacy controls all live here.</p></div>
+        <div class="page-heading settings-heading">
+          <div>
+            <span class="eyebrow">Settings</span>
+            <h2>Privacy & Comfort</h2>
+            <p class="muted">Choose a category to keep things simple.</p>
+          </div>
         </div>
 
-        <article class="card soft-card">
-          <div class="section-title-row"><div><span class="eyebrow">Try the experience</span><h3>Preview a plan</h3><p class="muted">No payment is collected in this web prototype.</p></div></div>
-          <div class="plan-grid subscription-list" id="planGrid">
-            <button class="plan-card subscription-option" data-plan="free">
-              <span class="subscription-top"><strong>Free</strong><span class="subscription-price">$0</span></span>
-              <span class="subscription-features"><span>✓ Core period & cycle tracking</span><span>✓ Daily check-ins</span><span>✓ Vune Garden</span><span>✓ Basic cycle forecast</span></span>
-            </button>
-            <button class="plan-card subscription-option" data-plan="essential">
-              <span class="subscription-top"><strong>Essential</strong><span class="subscription-price">$4.99 <small>/ year</small></span></span>
-              <span class="subscription-features"><span>✓ Everything in Free</span><span>✓ Expanded tracking history</span><span>✓ More detailed daily tracking</span><span>✓ Custom reminders in the native app</span></span>
-            </button>
-            <button class="plan-card subscription-option" data-plan="plus">
-              <span class="subscription-top"><strong>Plus</strong><span class="subscription-price">$12.99 <small>/ year</small></span></span>
-              <span class="subscription-features"><span>✓ Everything in Essential</span><span>✓ Deeper symptom & mood patterns</span><span>✓ Custom tags</span><span>✓ Enhanced personalization</span></span>
-            </button>
-            <button class="plan-card subscription-option" data-plan="complete">
-              <span class="subscription-top"><strong>Complete</strong><span class="subscription-price">$24.99 <small>/ year</small></span></span>
-              <span class="subscription-features"><span>✓ Everything in Plus</span><span>✓ Full personal analytics</span><span>✓ Encrypted backup & sync tools</span><span>✓ Advanced cycle dashboards</span></span>
-            </button>
-            <button class="plan-card subscription-option supporter-plan" data-plan="supporter">
-              <span class="subscription-top"><span><strong>Supporter ✦</strong><em class="recommended-tag">Full Vune experience</em></span><span class="subscription-price">$32.99 <small>/ year</small></span></span>
-              <span class="subscription-features"><span>✓ Everything in Complete</span><span>✓ Vune Companion</span><span>✓ Appointment preparation</span><span>✓ Health Summary & advanced exports</span></span>
-            </button>
+        <div class="settings-shell">
+          <nav class="settings-menu" aria-label="Settings categories">
+            <button class="settings-tab active" type="button" data-settings-tab="plan"><span>✦</span><span><strong>Plan</strong><small>Preview tiers</small></span></button>
+            <button class="settings-tab" type="button" data-settings-tab="security"><span>🔐</span><span><strong>Security</strong><small>Lock & passcode</small></span></button>
+            <button class="settings-tab" type="button" data-settings-tab="backup"><span>☁</span><span><strong>Backup</strong><small>Save or restore</small></span></button>
+            <button class="settings-tab" type="button" data-settings-tab="privacy"><span>♡</span><span><strong>Privacy</strong><small>What Vune avoids</small></span></button>
+            <button class="settings-tab danger-settings-tab" type="button" data-settings-tab="data"><span>↺</span><span><strong>Data</strong><small>Reset this copy</small></span></button>
+          </nav>
+
+          <div class="settings-panels">
+            <section class="settings-panel active" data-settings-panel="plan">
+              <div class="settings-panel-heading">
+                <div><span class="eyebrow">Subscription</span><h3>Choose a Vune experience</h3></div>
+                <span class="settings-note">Preview only</span>
+              </div>
+
+              <div class="plan-grid subscription-list" id="planGrid">
+                <button class="plan-card subscription-option" data-plan="free">
+                  <span class="subscription-top"><strong>Free</strong><span class="subscription-price">$0</span></span>
+                  <span class="subscription-features"><span>✓ Cycle tracking</span><span>✓ Daily check-ins</span><span>✓ Vune Garden</span><span>✓ Basic forecast</span></span>
+                </button>
+
+                <button class="plan-card subscription-option" data-plan="essential">
+                  <span class="subscription-top"><strong>Essential</strong><span class="subscription-price">$4.99 <small>/ year</small></span></span>
+                  <span class="subscription-features"><span>✓ Free features</span><span>✓ More history</span><span>✓ Detailed tracking</span><span>✓ Custom reminders</span></span>
+                </button>
+
+                <button class="plan-card subscription-option" data-plan="plus">
+                  <span class="subscription-top"><strong>Plus</strong><span class="subscription-price">$12.99 <small>/ year</small></span></span>
+                  <span class="subscription-features"><span>✓ Essential features</span><span>✓ Deeper patterns</span><span>✓ Custom tags</span><span>✓ Personalization</span></span>
+                </button>
+
+                <button class="plan-card subscription-option" data-plan="complete">
+                  <span class="subscription-top"><strong>Complete</strong><span class="subscription-price">$24.99 <small>/ year</small></span></span>
+                  <span class="subscription-features"><span>✓ Plus features</span><span>✓ Full analytics</span><span>✓ Encrypted sync tools</span><span>✓ Advanced dashboards</span></span>
+                </button>
+
+                <button class="plan-card subscription-option supporter-plan" data-plan="supporter">
+                  <span class="subscription-top"><span><strong>Supporter ✦</strong><em class="recommended-tag">Full experience</em></span><span class="subscription-price">$32.99 <small>/ year</small></span></span>
+                  <span class="subscription-features"><span>✓ Complete features</span><span>✓ Vune Companion</span><span>✓ Appointment prep</span><span>✓ Health Summary</span></span>
+                </button>
+              </div>
+            </section>
+
+            <section class="settings-panel" data-settings-panel="security" hidden>
+              <div class="settings-panel-heading">
+                <div><span class="eyebrow">Security</span><h3>Lock & passcode</h3></div>
+              </div>
+              <div class="settings-mini-card">
+                <label>Lock Vune after
+                  <select id="lockMinutesSelect">
+                    <option value="0">Right away</option>
+                    <option value="1">1 minute</option>
+                    <option value="5">5 minutes</option>
+                    <option value="15">15 minutes</option>
+                  </select>
+                </label>
+                <button id="changePasscodeBtn" class="secondary-btn" type="button">Change passcode</button>
+              </div>
+            </section>
+
+            <section class="settings-panel" data-settings-panel="backup" hidden>
+              <div class="settings-panel-heading">
+                <div><span class="eyebrow">Backup</span><h3>Keep an encrypted copy</h3></div>
+              </div>
+              <div class="settings-mini-card">
+                <p class="muted">Use the same passcode when restoring.</p>
+                <div class="button-row">
+                  <button id="exportBackupBtn" class="secondary-btn" type="button">Save backup</button>
+                  <label class="secondary-btn file-btn">Restore backup<input id="importBackupInput" type="file" accept="application/json,.json"></label>
+                </div>
+              </div>
+            </section>
+
+            <section class="settings-panel" data-settings-panel="privacy" hidden>
+              <div class="settings-panel-heading">
+                <div><span class="eyebrow">Privacy</span><h3>Built to collect less</h3></div>
+              </div>
+              <div class="privacy-check-grid">
+                <span>✓ No ad SDK</span>
+                <span>✓ No analytics SDK</span>
+                <span>✓ No external AI calls</span>
+                <span>✓ No health-data server</span>
+                <span>✓ Encrypted local vault</span>
+              </div>
+              <a class="text-link settings-link" href="privacy.html">Read privacy notes →</a>
+            </section>
+
+            <section class="settings-panel" data-settings-panel="data" hidden>
+              <div class="settings-panel-heading">
+                <div><span class="eyebrow">Data</span><h3>Reset this browser copy</h3></div>
+              </div>
+              <div class="settings-mini-card danger-settings-card">
+                <p class="muted">This removes the encrypted Vune vault from this browser. An exported backup is the only way to restore it.</p>
+                <button id="deleteAllBtn" class="danger-btn" type="button">Delete this browser copy</button>
+              </div>
+            </section>
           </div>
-        </article>
-
-        <div class="settings-grid">
-          <article class="card soft-card">
-            <span class="eyebrow">Your lock</span>
-            <h3>When should Vune lock?</h3>
-            <label>Lock my space after
-              <select id="lockMinutesSelect">
-                <option value="0">Right away when I leave</option>
-                <option value="1">1 minute</option>
-                <option value="5">5 minutes</option>
-                <option value="15">15 minutes</option>
-              </select>
-            </label>
-            <button id="changePasscodeBtn" class="secondary-btn" type="button">Change my passcode</button>
-          </article>
-
-          <article class="card soft-card">
-            <span class="eyebrow">Keep a copy</span>
-            <h3>Encrypted backup</h3>
-            <p class="muted">Save an encrypted copy you can restore later with the same passcode.</p>
-            <div class="button-row">
-              <button id="exportBackupBtn" class="secondary-btn" type="button">Save encrypted backup</button>
-              <label class="secondary-btn file-btn">Restore backup<input id="importBackupInput" type="file" accept="application/json,.json"></label>
-            </div>
-          </article>
-
-          <article class="card soft-card">
-            <span class="eyebrow">Your privacy</span>
-            <h3>What this prototype avoids</h3>
-            <ul class="clean-list">
-              <li>No analytics SDK</li>
-              <li>No ad SDK</li>
-              <li>No external AI calls</li>
-              <li>No health-data server</li>
-              <li>Encrypted local vault</li>
-            </ul>
-            <a class="text-link" href="privacy.html">Read the privacy notes →</a>
-          </article>
-
-          <article class="card danger-card">
-            <span class="eyebrow">Reset this copy</span>
-            <h3>Delete my Vune data</h3>
-            <p class="muted">This removes the encrypted Vune vault from this browser. An exported backup is the only way to bring it back.</p>
-            <button id="deleteAllBtn" class="danger-btn" type="button">Delete this browser copy</button>
-          </article>
         </div>
       </section>
 
@@ -515,7 +547,7 @@
 
       <button id="companionLauncher" class="companion-launcher" type="button" aria-expanded="false" aria-controls="companionPanel">
         <span class="companion-launcher-orb" aria-hidden="true">✦</span>
-        <span class="companion-launcher-copy"><strong>Ask Vune</strong><small>Your Companion is here</small></span>
+        <span class="companion-launcher-copy"><strong>Ask Vune</strong></span>
         <span class="companion-idle-dot" aria-hidden="true"></span>
       </button>
     </div>
