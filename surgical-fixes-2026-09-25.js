@@ -124,20 +124,21 @@
       reflection: reflection,
       updatedAt: new Date().toISOString()
     };
-    state.ui.pendingGardenGrowth = isNewEntry;
+
+    /* Finishing a check-in should always complete the visible care ritual.
+       The Garden's care-day total is still derived from unique saved dates,
+       so reopening/editing today's entry cannot create a duplicate care day. */
+    state.ui.pendingGardenGrowth = true;
 
     await persistState();
     renderAll();
     safe("checkinDate").value = date;
     loadCheckinForDate(date);
 
-    if(isNewEntry){
-      showToast("Saved — watering your plant now. 🌱💧");
-      showView("garden");
-    } else {
-      await persistState();
-      showToast("Check-in updated. Your plant keeps its existing care day. 💜");
-    }
+    showToast(isNewEntry
+      ? "Saved — watering your plant now. 🌱💧"
+      : "Check-in updated — watering your plant now. 🌱💧");
+    showView("garden");
   };
 
   /* Keep the local prototype conversational for general wellness prompts while
