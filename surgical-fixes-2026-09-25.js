@@ -162,6 +162,127 @@
     };
   }
 
+
+
+  /* Bloom Notes history: the main journal shows only the newest saved note.
+     Opening a note routes to a dedicated history page instead of filling the
+     new-entry form. */
+  function vuneSortedJournalEntries(){
+    if(!state || !Array.isArray(state.journals)) return [];
+    return state.journals.slice().sort(function(a,b){
+      const byDate = String(b.date || "").localeCompare(String(a.date || ""));
+      if(byDate) return byDate;
+      return String(b.updatedAt || b.createdAt || "").localeCompare(String(a.updatedAt || a.createdAt || ""));
+    });
+  }
+
+  function vuneEnsureJournalEntriesView(){
+    let view = safe("view-journal-entries");
+    if(view) return view;
+    view = document.createElement("section");
+    view.id = "view-journal-entries";
+    view.className = "view journal-entries-view";
+    const main = document.querySelector(".main-content");
+    const footer = main && main.querySelector(".app-footer");
+    if(main) main.insertBefore(view, footer || null);
+    return view;
+  }
+
+  function vuneRenderJournalEntries(selectedId){
+    if(!state || !hasJournal()) return;
+    const view = vuneEnsureJournalEntriesView();
+    const entries = vuneSortedJournalEntries();
+
+    const content = entries.length
+      ? entries.map(function(j){
+          const selected = selectedId && String(j.id) === String(selectedId);
+          return '<article class="card journal-history-entry'+(selected?' selected':'')+'" data-journal-entry-id="'+esc(j.id)+'">'+
+            '<div class="journal-entry-head"><div><span class="eyebrow">'+esc(prettyDate(j.date))+'</span><h3>'+
+            esc(j.title || prettyDate(j.date,{month:"long",day:"numeric",year:"numeric",timeZone:"UTC"}))+
+            '</h3></div><div class="journal-actions">'+
+            '<button class="text-btn" type="button" data-journal-edit-from-entries="'+esc(j.id)+'">Edit</button>'+
+            '<button class="text-btn danger-text" type="button" data-delete-journal="'+esc(j.id)+'">Delete</button>'+
+            '</div></div><p class="journal-history-text">'+esc(j.text || "")+'</p></article>';
+        }).join("")
+      : '<article class="card empty-state"><strong>No Bloom Notes yet.</strong><br><span>Your saved notes will appear here.</span></article>';
+
+    view.innerHTML =
+      '<div class="page-heading"><div><span class="eyebrow">Your private journal</span><h2>Bloom Notes Entries</h2>'+
+      '<p class="muted">Most recent to oldest.</p></div>'+
+      '<button class="secondary-btn" type="button" data-go="journal">← Back to Bloom Notes</button></div>'+
+      '<div class="journal-history-page-list">'+content+'</div>';
+
+    showView("journal-entries");
+
+    if(selectedId){
+      requestAnimationFrame(function(){
+        const selected = view.querySelector('[data-journal-entry-id="'+CSS.escape(String(selectedId))+'"]');
+        if(selected) selected.scrollIntoView({behavior:"smooth",block:"center"});
+      });
+    }
+  }
+
+  renderJournal = function(){
+    if(!state || !hasJournal()) return;
+    const list = safe("journalList");
+    if(!list) return;
+
+    const heading = document.querySelector("#view-journal .journal-history-heading");
+    if(heading){
+      const eyebrow = heading.querySelector(".eyebrow");
+      const title = heading.querySelector("h3");
+      if(eyebrow) eyebrow.textContent = "Most recent";
+      if(title) title.textContent = "Latest Bloom Note";
+    }
+
+    const entries = vuneSortedJournalEntries();
+    if(!entries.length){
+      list.innerHTML = '<article class="card empty-state"><strong>No notes yet 💜</strong><br><span>This space is here whenever something feels worth remembering.</span></article>';
+      return;
+    }
+
+    const j = entries[0];
+    list.innerHTML =
+      '<article class="journal-entry compact-entry journal-latest-entry"><div class="journal-entry-head"><div><span class="eyebrow">'+
+      esc(prettyDate(j.date))+'</span><h3>'+
+      esc(j.title || prettyDate(j.date,{month:"long",day:"numeric",year:"numeric",timeZone:"UTC"}))+
+      '</h3></div><div class="journal-actions">'+
+      '<button class="text-btn" type="button" data-open-journal="'+esc(j.id)+'">Open</button>'+
+      '<button class="text-btn danger-text" type="button" data-delete-journal="'+esc(j.id)+'">Delete</button>'+
+      '</div></div></article>'+
+      (entries.length > 1
+        ? '<button class="secondary-btn journal-view-all" type="button" data-view-all-journals>View all '+entries.length+' Bloom Notes →</button>'
+        : '<button class="secondary-btn journal-view-all" type="button" data-view-all-journals>Open journal entries →</button>');
+  };
+
+  document.addEventListener("click", function(event){
+    const open = event.target.closest("[data-open-journal]");
+    if(open){
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      const sheet = safe("dayDetailSheet");
+      if(sheet) sheet.hidden = true;
+      vuneRenderJournalEntries(open.dataset.openJournal);
+      return;
+    }
+
+    const all = event.target.closest("[data-view-all-journals]");
+    if(all){
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      vuneRenderJournalEntries();
+      return;
+    }
+
+    const edit = event.target.closest("[data-journal-edit-from-entries]");
+    if(edit){
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      editJournal(edit.dataset.journalEditFromEntries);
+      return;
+    }
+  }, true);
+
   /* Remove an accidental literal backslash-n text node left by an earlier patch. */
   Array.from(document.body.childNodes).forEach(function(node){
     if(node.nodeType === Node.TEXT_NODE && node.textContent.trim() === "\\n") node.remove();
