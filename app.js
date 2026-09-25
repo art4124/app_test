@@ -405,7 +405,7 @@ function renderToday() {
     $("predictionConfidence").textContent = prediction.confidence;
   } else {
     $("predictionDate").textContent = "Add your first period";
-    $("predictionDetail").textContent = "Once you log a period start, Vune can begin learning your rhythm.";
+    $("predictionDetail").textContent = "Log a period start to begin.";
     $("predictionConfidence").textContent = "Still learning";
   }
 
@@ -423,8 +423,8 @@ function renderToday() {
   const plantEmoji = garden.stage >= 4 ? "🌸" : garden.stage >= 2 ? "🌿" : garden.stage >= 1 ? "🌱" : "🫘";
   $("miniPlant").textContent = plantEmoji;
   $("gardenMiniStatus").textContent = garden.stageName;
-  $("gardenMiniDetail").textContent = garden.waterings + " care day" + (garden.waterings === 1 ? "" : "s") + " • no streaks, no lost progress";
-  $("activePlanBadge").textContent = planNames[state.settings.plan] + (state.settings.plan === "supporter" ? " preview" : " preview");
+  $("gardenMiniDetail").textContent = garden.waterings + " care day" + (garden.waterings === 1 ? "" : "s");
+  $("activePlanBadge").textContent = planNames[state.settings.plan];
 }
 
 function loadCheckinForDate(date) {
@@ -506,13 +506,26 @@ function renderCalendar() {
     const iso = date.getFullYear() + "-" + String(date.getMonth() + 1).padStart(2, "0") + "-" + String(date.getDate()).padStart(2, "0");
     const entry = state.entries[iso];
     const muted = date.getMonth() !== month;
-    const dots = [];
-    if (entry && entry.period) dots.push('<i class="day-dot period"></i>');
-    if (entry) dots.push('<i class="day-dot logged"></i>');
-    if (predicted.has(iso) && !(entry && entry.period)) dots.push('<i class="day-dot predicted"></i>');
+    const markers = [];
+    const isPeriod = Boolean(entry && entry.period);
+    const isLogged = Boolean(entry);
+    const isPredicted = predicted.has(iso) && !isPeriod;
+
+    if (isPeriod) markers.push('<i class="garden-day-marker period-marker" aria-label="Period">✿</i>');
+    if (isLogged) markers.push('<i class="garden-day-marker logged-marker" aria-label="Check-in">●</i>');
+    if (isPredicted) markers.push('<i class="garden-day-marker predicted-marker" aria-label="Forecast">○</i>');
+
     html.push(
-      '<button type="button" class="calendar-day' + (muted ? ' muted-day' : '') + (iso === todayISO() ? ' today' : '') + '" data-calendar-date="' + iso + '">' +
-      '<span class="day-number">' + date.getDate() + '</span><span class="day-dots">' + dots.join("") + '</span></button>'
+      '<button type="button" class="calendar-day garden-day' +
+      (muted ? ' muted-day' : '') +
+      (iso === todayISO() ? ' today' : '') +
+      (isPeriod ? ' period-day' : '') +
+      (isLogged ? ' logged-day' : '') +
+      (isPredicted ? ' predicted-day' : '') +
+      '" data-calendar-date="' + iso + '">' +
+      '<span class="day-number">' + date.getDate() + '</span>' +
+      '<span class="garden-day-markers">' + markers.join("") + '</span>' +
+      '</button>'
     );
   }
   $("calendarGrid").innerHTML = html.join("");
