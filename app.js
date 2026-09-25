@@ -323,12 +323,12 @@ function getGardenInfo() {
   let stage = 0;
   let stageName = "Seed";
   let next = 1;
-  let message = "Your first check-in will water your seed.";
-  if (waterings >= 1) { stage = 1; stageName = "Sprout"; next = 3; message = "Your seed has sprouted. Keep checking in when it feels useful."; }
-  if (waterings >= 3) { stage = 2; stageName = "Growing"; next = 7; message = "New leaves are appearing with your care."; }
-  if (waterings >= 7) { stage = 3; stageName = "Budding"; next = 14; message = "Your plant is preparing its first bloom."; }
-  if (waterings >= 14) { stage = 4; stageName = "Blooming"; next = 30; message = "Your garden is blooming with your tracking history."; }
-  if (waterings >= 30) { stage = 5; stageName = "Full Bloom"; next = 30; message = "Your garden keeps growing without streak pressure."; }
+  let message = "Your garden is ready for its first moment of care.";
+  if (waterings >= 1) { stage = 1; stageName = "Sprout"; next = 3; message = "A small beginning is still a beginning. 🌱"; }
+  if (waterings >= 3) { stage = 2; stageName = "Growing"; next = 7; message = "Your check-ins are helping your garden take shape. 🌿"; }
+  if (waterings >= 7) { stage = 3; stageName = "Budding"; next = 14; message = "You’re building a clearer picture of your cycle. 💜"; }
+  if (waterings >= 14) { stage = 4; stageName = "Blooming"; next = 30; message = "Your care is turning into something beautiful and useful. 🌸"; }
+  if (waterings >= 30) { stage = 5; stageName = "Full Bloom"; next = 30; message = "Your garden reflects time, care, and consistency — never perfection. ✨"; }
   const previousThreshold = stage === 0 ? 0 : stage === 1 ? 1 : stage === 2 ? 3 : stage === 3 ? 7 : stage === 4 ? 14 : 30;
   const progress = stage === 5 ? 100 : Math.max(0, Math.min(100, ((waterings - previousThreshold) / (next - previousThreshold)) * 100));
   return {
@@ -382,7 +382,7 @@ function renderAll() {
 function renderToday() {
   const now = new Date();
   const hour = now.getHours();
-  $("todayGreeting").textContent = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
+  $("todayGreeting").textContent = hour < 12 ? "Good morning 💜" : hour < 18 ? "Good afternoon 🌿" : "Good evening 🌙";
   $("todayDate").textContent = now.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
 
   const prediction = getPrediction();
@@ -392,9 +392,9 @@ function renderToday() {
     $("predictionDetail").textContent = until >= 0 ? "About " + until + " day" + (until === 1 ? "" : "s") + " away • " + prediction.average + "-day average" : Math.abs(until) + " days past this estimate • log a new start when it arrives";
     $("predictionConfidence").textContent = prediction.confidence;
   } else {
-    $("predictionDate").textContent = "Add a period";
-    $("predictionDetail").textContent = "Log a period start to begin predictions.";
-    $("predictionConfidence").textContent = "Not enough data";
+    $("predictionDate").textContent = "Add your first period";
+    $("predictionDetail").textContent = "Once you log a period start, Vune can begin learning your rhythm.";
+    $("predictionConfidence").textContent = "Still learning";
   }
 
   const last = getLastEntryDate();
@@ -402,7 +402,7 @@ function renderToday() {
   if (last && last < todayISO()) {
     const rested = diffDays(last, todayISO());
     returnBox.hidden = false;
-    returnBox.textContent = "Welcome back! Your garden has rested for " + rested + " day" + (rested === 1 ? "" : "s") + ". Nothing was lost — pick up right where you left off. 🌿";
+    returnBox.textContent = "Welcome back 💜 Your garden has rested for " + rested + " day" + (rested === 1 ? "" : "s") + ". Everything you grew is still here.";
   } else {
     returnBox.hidden = true;
   }
@@ -411,7 +411,7 @@ function renderToday() {
   const plantEmoji = garden.stage >= 4 ? "🌸" : garden.stage >= 2 ? "🌿" : garden.stage >= 1 ? "🌱" : "🫘";
   $("miniPlant").textContent = plantEmoji;
   $("gardenMiniStatus").textContent = garden.stageName;
-  $("gardenMiniDetail").textContent = garden.waterings + " day" + (garden.waterings === 1 ? "" : "s") + " watered • one check-in per day counts once";
+  $("gardenMiniDetail").textContent = garden.waterings + " care day" + (garden.waterings === 1 ? "" : "s") + " • no streaks, no lost progress";
   $("activePlanBadge").textContent = planNames[state.settings.plan] + (state.settings.plan === "supporter" ? " preview" : " preview");
 }
 
@@ -447,7 +447,7 @@ async function saveCheckin(event) {
   renderAll();
   $("checkinDate").value = date;
   loadCheckinForDate(date);
-  showToast(existed ? "Check-in updated. Your plant was already watered for this day." : "Check-in saved — your plant was watered. 💧");
+  showToast(existed ? "Updated gently 💜 Your garden is still growing." : "Saved — your plant had a drink today. 🌱💧");
 }
 
 function renderCalendar() {
@@ -529,14 +529,14 @@ async function saveJournal(event) {
   $("journalText").value = "";
   $("journalDate").value = todayISO();
   renderJournal();
-  showToast("Journal entry encrypted and saved.");
+  showToast("Your private note is tucked safely away. 🔐💜");
 }
 
 function renderJournal() {
   if (!state) return;
   const list = $("journalList");
   if (!state.journals.length) {
-    list.innerHTML = '<article class="card empty-state">Your journal is empty. Write only what feels useful to you.</article>';
+    list.innerHTML = '<article class="card empty-state"><strong>No notes yet 💜</strong><br><span>This space is here whenever something feels worth remembering.</span></article>';
     return;
   }
   list.innerHTML = state.journals.map(function (entry) {
@@ -574,7 +574,7 @@ function renderBars(targetId, values) {
   const target = $(targetId);
   if (!values.length) {
     target.className = "bar-chart empty-state";
-    target.textContent = targetId === "moodChart" ? "Log moods to see patterns." : "Log symptoms to see patterns.";
+    target.textContent = targetId === "moodChart" ? "Your mood patterns will appear here over time." : "Your symptom patterns will gently appear here as you log more.";
     return;
   }
   target.className = "bar-chart";
@@ -602,7 +602,7 @@ function renderInsights() {
   const target = $("cycleHistory");
   if (!cycles.length) {
     target.className = "cycle-history empty-state";
-    target.textContent = "Two period starts are needed to calculate a cycle length.";
+    target.textContent = "Once you’ve logged two period starts, Vune can begin showing your cycle rhythm here.";
   } else {
     target.className = "cycle-history";
     const recent = cycles.slice(-8);
@@ -624,7 +624,7 @@ function renderAssistant() {
   const target = $("assistantMessages");
   target.innerHTML = "";
   if (!state.assistantMessages.length) {
-    addAssistantBubble("assistant", "Hi — I’m the local Vune Assistant prototype. I can summarize patterns in what you have tracked here without sending your entries to a server.");
+    addAssistantBubble("assistant", "Hi, I’m your Vune Companion ✦\n\nI’m here to help you notice patterns, make sense of what you’ve tracked, and get ready for appointments. Nothing you ask me in this test experience is sent to an outside AI provider.");
   } else {
     state.assistantMessages.forEach(function (message) {
       addAssistantBubble(message.role, message.text);
@@ -647,15 +647,15 @@ function assistantSummary() {
   const parts = [];
   if (cycles.length) {
     const values = cycles.map(function (item) { return item.days; });
-    parts.push("Your recorded cycles average " + Math.round(average(values)) + " days, with a range of " + Math.min.apply(null, values) + "–" + Math.max.apply(null, values) + " days.");
+    parts.push("Here’s what your cycle has been looking like lately 💜\n\nYour recorded cycles average about " + Math.round(average(values)) + " days, with a range of " + Math.min.apply(null, values) + "–" + Math.max.apply(null, values) + " days.");
   } else {
-    parts.push("I need at least two logged period starts before I can summarize cycle length.");
+    parts.push("I’m still learning your rhythm 🌱 Once you’ve logged at least two period starts, I can give you a more useful cycle summary.");
   }
   if (symptoms.length) {
-    parts.push("Your most frequently logged symptoms are " + symptoms.slice(0, 3).map(function (item) { return item.name + " (" + item.count + ")"; }).join(", ") + ".");
+    parts.push("The things you’ve been noticing most are " + symptoms.slice(0, 3).map(function (item) { return item.name + " (" + item.count + ")"; }).join(", ") + ".");
   }
   if (prediction) parts.push("Your current local estimate for the next period start is " + prettyDate(prediction.date) + ".");
-  parts.push("These are observations from your records, not a diagnosis.");
+  parts.push("This is just a gentle summary of your own records — not a diagnosis — but it can help you notice what repeats over time.");
   return parts.join("\n\n");
 }
 
@@ -664,7 +664,7 @@ function appointmentSummary() {
   const cycles = getCycleLengths();
   const symptoms = getSymptomCounts();
   const heavyDays = getEntryDates().filter(function (date) { return state.entries[date].flow === "heavy"; }).length;
-  const lines = ["Here are details from your Vune records you may want to discuss:"];
+  const lines = ["Here’s a simple appointment prep note based on what you’ve tracked 💜"];
   lines.push("• " + starts.length + " period start" + (starts.length === 1 ? "" : "s") + " logged.");
   if (cycles.length) {
     const values = cycles.map(function (item) { return item.days; });
@@ -673,37 +673,37 @@ function appointmentSummary() {
   if (symptoms.length) lines.push("• Most logged symptoms: " + symptoms.slice(0, 4).map(function (item) { return item.name; }).join(", ") + ".");
   if (heavyDays) lines.push("• Heavy flow was logged on " + heavyDays + " day" + (heavyDays === 1 ? "" : "s") + ".");
   lines.push("• You have " + state.journals.length + " private journal entr" + (state.journals.length === 1 ? "y" : "ies") + " available to review yourself.");
-  lines.push("\nVune can organize what you tracked, but a clinician should interpret symptoms and diagnose conditions.");
+  lines.push("\nYou could ask your clinician whether any of these patterns are expected for you or worth watching more closely. Vune can organize what you tracked, but it can’t diagnose a condition.");
   return lines.join("\n");
 }
 
 function answerAssistant(prompt) {
   const lower = prompt.toLowerCase();
   if (/diagnos|do i have|pcos|endometri|fibroid|infection|am i pregnant|pregnant/.test(lower)) {
-    return "I can’t determine or diagnose a medical condition from your tracking history. I can summarize the patterns you recorded and help you prepare questions for a clinician. Try asking: “Help me prepare for a doctor appointment.”";
+    return "I can help organize what you’ve noticed, but I can’t tell you whether you have a medical condition. 💜\n\nIf you want, I can summarize your patterns or help you put together questions to bring to a clinician.";
   }
   if (/doctor|appointment|clinician|obgyn|ob-gyn/.test(lower)) return appointmentSummary();
   if (/summary|summarize|pattern|overview/.test(lower)) return assistantSummary();
   if (/next period|when.*period|prediction/.test(lower)) {
     const prediction = getPrediction();
-    return prediction ? "Based only on your recorded starts, the current estimate is " + prettyDate(prediction.date) + " using an average cycle length of about " + prediction.average + " days. Predictions can shift, especially with irregular cycles." : "I need at least one logged period start before I can estimate the next one.";
+    return prediction ? "Based on what you’ve logged so far, Vune’s current estimate is " + prettyDate(prediction.date) + ". 🌙\n\nThat uses an average cycle length of about " + prediction.average + " days, and it may shift as your body and your tracking change." : "I’m still learning your rhythm 🌱 Log a period start and I can begin making a gentle estimate.";
   }
   if (/symptom|cramp|headache|fatigue|bloat|acne|back pain|tender|craving/.test(lower)) {
     const symptoms = getSymptomCounts();
-    if (!symptoms.length) return "You haven’t logged symptoms yet.";
+    if (!symptoms.length) return "Nothing to summarize here yet — and that’s completely okay. 🌿 Log symptoms only when it feels useful.";
     const named = symptoms.find(function (item) { return lower.indexOf(item.name.toLowerCase()) >= 0; });
-    if (named) return "You logged " + named.name + " on " + named.count + " check-in day" + (named.count === 1 ? "" : "s") + ". I’m reporting frequency only, not a medical interpretation.";
-    return "Your most logged symptoms are " + symptoms.slice(0, 5).map(function (item) { return item.name + " (" + item.count + ")"; }).join(", ") + ".";
+    if (named) return "You’ve noticed " + named.name + " on " + named.count + " check-in day" + (named.count === 1 ? "" : "s") + ". I’m only reflecting what you recorded, not making a medical interpretation.";
+    return "Here’s what has been showing up most in your check-ins: " + symptoms.slice(0, 5).map(function (item) { return item.name + " (" + item.count + ")"; }).join(", ") + ". 💜";
   }
   if (/mood|feel|emotion/.test(lower)) {
     const moods = getMoodCounts();
-    if (!moods.length) return "You haven’t logged moods yet.";
-    return "Your most frequently logged moods are " + moods.slice(0, 4).map(function (item) { return item.name + " (" + item.count + ")"; }).join(", ") + ".";
+    if (!moods.length) return "You haven’t added any moods yet. If you’d rather not track them, that’s okay too. 🌿";
+    return "The moods you’ve logged most often are " + moods.slice(0, 4).map(function (item) { return item.name + " (" + item.count + ")"; }).join(", ") + ". Think of this as a reflection, not a judgment. 💜";
   }
   if (/journal|diary|reflection/.test(lower)) {
     return "You have " + state.journals.length + " saved journal entr" + (state.journals.length === 1 ? "y" : "ies") + " and " + getEntryDates().filter(function (date) { return Boolean(state.entries[date].reflection); }).length + " daily reflections. This prototype keeps them inside your encrypted browser vault.";
   }
-  return "I can currently help with cycle summaries, symptom frequency, mood patterns, next-period estimates, journal counts, and appointment preparation. The native Supporter version is planned to use an on-device model for richer private conversations.";
+  return "I can help with cycle summaries, things that keep showing up, mood patterns, period estimates, and appointment prep. ✦\n\nTry asking “What patterns are showing up?” or “Help me get ready for an appointment.”";
 }
 
 async function sendAssistant(event) {
@@ -766,7 +766,7 @@ async function selectPlan(plan) {
   state.settings.plan = plan;
   await persistState();
   renderAll();
-  showToast(planNames[plan] + " preview selected. No payment was collected.");
+  showToast(planNames[plan] + " is ready to explore ✨ No payment was collected.");
 }
 
 async function exportBackup() {
@@ -900,6 +900,16 @@ function bindEvents() {
 
     const plan = event.target.closest("[data-plan]");
     if (plan && state) selectPlan(plan.dataset.plan);
+
+    const journalPrompt = event.target.closest("[data-journal-prompt]");
+    if (journalPrompt && state) {
+      const field = $("journalText");
+      const promptText = journalPrompt.dataset.journalPrompt || "";
+      if (!field.value.trim()) field.value = promptText;
+      else field.value = field.value + "\n\n" + promptText;
+      field.focus();
+      field.setSelectionRange(field.value.length, field.value.length);
+    }
   });
 
   $("checkinForm").addEventListener("submit", saveCheckin);
@@ -927,7 +937,7 @@ function bindEvents() {
     state.settings.lockMinutes = Number($("lockMinutesSelect").value);
     await persistState();
     scheduleAutoLock();
-    showToast("Auto-lock preference saved.");
+    showToast("Your privacy preference is saved. 🔐");
   });
 
   $("changePasscodeBtn").addEventListener("click", changePasscode);
