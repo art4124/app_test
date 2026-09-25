@@ -1288,7 +1288,9 @@ selectPlan = vuneSetBetaPlan;
     }catch(error){
       try{
         if(oldPayload != null) localStorage.setItem(DATA_KEY,oldPayload);
+        else localStorage.removeItem(DATA_KEY);
         if(oldSalt != null) localStorage.setItem(SALT_KEY,oldSalt);
+        else localStorage.removeItem(SALT_KEY);
       }catch(rollbackError){}
       currentKey = oldKey;
       showToast("Vune could not change the passcode. Your previous passcode is still active.");
