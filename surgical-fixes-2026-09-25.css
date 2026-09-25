@@ -302,3 +302,144 @@ body{
 .companion-panel{
   max-width:100%;
 }
+
+
+/* Accent coverage audit: selected pastel drives all semantic accent text/icons
+   while ordinary reading text stays neutral for contrast. */
+body[class*="accent-"] .eyebrow,
+body[class*="accent-"] .text-link,
+body[class*="accent-"] .text-btn,
+body[class*="accent-"] .subscription-price,
+body[class*="accent-"] .new-unlock,
+body[class*="accent-"] .journal-page-mark,
+body[class*="accent-"] .journal-history-heading .eyebrow,
+body[class*="accent-"] .calendar-month-title,
+body[class*="accent-"] .current-plan-card .eyebrow{
+  color:var(--vune-accent-ink)!important;
+}
+body.theme-dark[class*="accent-"] .eyebrow,
+body.theme-dark[class*="accent-"] .text-link,
+body.theme-dark[class*="accent-"] .text-btn,
+body.theme-dark[class*="accent-"] .subscription-price,
+body.theme-dark[class*="accent-"] .new-unlock,
+body.theme-dark[class*="accent-"] .journal-page-mark,
+body.theme-dark[class*="accent-"] .journal-history-heading .eyebrow,
+body.theme-dark[class*="accent-"] .calendar-month-title,
+body.theme-dark[class*="accent-"] .current-plan-card .eyebrow{
+  color:var(--vune-accent)!important;
+}
+
+body[class*="accent-"] .brand-mark,
+body[class*="accent-"] .step-badge,
+body[class*="accent-"] .companion-avatar,
+body[class*="accent-"] .companion-launcher-orb{
+  background:var(--vune-accent)!important;
+  border-color:var(--vune-accent)!important;
+}
+body[class*="accent-"] .nav-btn>span,
+body[class*="accent-"] .card-icon,
+body[class*="accent-"] .settings-tab>span:first-child{
+  color:var(--vune-accent-ink)!important;
+  background:var(--vune-accent-soft)!important;
+  border-color:color-mix(in srgb,var(--vune-accent) 38%,transparent)!important;
+}
+body.theme-dark[class*="accent-"] .nav-btn>span,
+body.theme-dark[class*="accent-"] .card-icon,
+body.theme-dark[class*="accent-"] .settings-tab>span:first-child{
+  color:var(--vune-accent-ink)!important;
+  background:var(--vune-accent-soft)!important;
+  border-color:var(--vune-accent)!important;
+}
+
+/* Bloom Notes binder and page details inherit the chosen pastel. */
+body[class*="accent-"] .journal-book{
+  background:color-mix(in srgb,var(--vune-accent) 78%,#4b3b55)!important;
+  border-color:color-mix(in srgb,var(--vune-accent) 55%,transparent)!important;
+  box-shadow:0 22px 48px color-mix(in srgb,var(--vune-accent) 18%,transparent)!important;
+}
+body[class*="accent-"] .journal-binding{
+  background:linear-gradient(
+    90deg,
+    color-mix(in srgb,var(--vune-accent) 70%,#3d3046),
+    var(--vune-accent)
+  )!important;
+}
+body[class*="accent-"] .journal-binding span{
+  background:color-mix(in srgb,var(--vune-accent-soft) 72%,#fff)!important;
+  box-shadow:
+    inset 0 1px 2px color-mix(in srgb,var(--vune-accent-ink) 28%,transparent),
+    0 1px 0 rgba(255,255,255,.35)!important;
+}
+body[class*="accent-"] .journal-paper{
+  background:
+    linear-gradient(
+      90deg,
+      transparent 0 30px,
+      color-mix(in srgb,var(--vune-accent) 34%,transparent) 30px 31px,
+      transparent 31px
+    ),
+    repeating-linear-gradient(180deg,#fffdf8 0,#fffdf8 31px,#e9e1ea 32px)!important;
+}
+body[class*="accent-"] .journal-bookmarks button{
+  background:var(--vune-accent-soft)!important;
+  color:var(--vune-accent-ink)!important;
+  border-color:color-mix(in srgb,var(--vune-accent) 40%,transparent)!important;
+}
+body[class*="accent-"] .journal-bookmarks button:nth-child(2n){
+  background:color-mix(in srgb,var(--vune-accent-soft) 72%,#fff)!important;
+  color:var(--vune-accent-ink)!important;
+  border-color:color-mix(in srgb,var(--vune-accent) 34%,transparent)!important;
+}
+body[class*="accent-"] .journal-pages .journal-entry:before{
+  background:var(--vune-accent)!important;
+}
+body.theme-dark[class*="accent-"] .journal-book{
+  background:color-mix(in srgb,var(--vune-dark-surface-2) 66%,var(--vune-accent) 34%)!important;
+  border-color:color-mix(in srgb,var(--vune-accent) 48%,#51485a)!important;
+}
+body.theme-dark[class*="accent-"] .journal-binding{
+  background:linear-gradient(
+    90deg,
+    color-mix(in srgb,#211e26 64%,var(--vune-accent) 36%),
+    color-mix(in srgb,#2b2731 48%,var(--vune-accent) 52%)
+  )!important;
+}
+body.theme-dark[class*="accent-"] .journal-paper{
+  background:
+    linear-gradient(
+      90deg,
+      transparent 0 30px,
+      color-mix(in srgb,var(--vune-accent) 38%,transparent) 30px 31px,
+      transparent 31px
+    ),
+    repeating-linear-gradient(
+      180deg,
+      var(--vune-dark-surface) 0,
+      var(--vune-dark-surface) 31px,
+      rgba(255,255,255,.07) 32px
+    )!important;
+}
+body.theme-dark[class*="accent-"] .journal-bookmarks button,
+body.theme-dark[class*="accent-"] .journal-bookmarks button:nth-child(2n){
+  background:var(--vune-accent-soft)!important;
+  color:var(--vune-accent-ink)!important;
+  border-color:color-mix(in srgb,var(--vune-accent) 52%,#51485a)!important;
+}
+
+/* Clear, in-place completion confirmation after a Daily Check-in save. */
+#saveCheckinStatus.checkin-save-confirmation{
+  display:inline-flex;
+  align-items:center;
+  min-height:40px;
+  padding:9px 12px;
+  border-radius:12px;
+  background:var(--vune-accent-soft)!important;
+  color:var(--vune-accent-ink)!important;
+  border:1px solid color-mix(in srgb,var(--vune-accent) 40%,transparent)!important;
+  font-weight:800;
+}
+body.theme-dark #saveCheckinStatus.checkin-save-confirmation{
+  background:var(--vune-accent-soft)!important;
+  color:var(--vune-accent-ink)!important;
+  border-color:var(--vune-accent)!important;
+}
