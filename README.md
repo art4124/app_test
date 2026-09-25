@@ -10,7 +10,6 @@ A privacy-first, local-only web prototype for testing the Vune period tracker be
 - Daily period / flow / mood / symptom check-ins
 - Local cycle-length calculations and next-period estimate
 - Calendar history and predicted dates
-- Vune Garden with one daily check-in = one watering, permanent progress, no streak punishment, rest messaging, and Memory Blooms
 - Encrypted journal
 - Local insights for cycles, symptoms, and moods
 - Supporter-plan simulation
@@ -20,6 +19,10 @@ A privacy-first, local-only web prototype for testing the Vune period tracker be
 - Plan-preview controls for Free, Essential, Plus, Complete, and Supporter
 - Offline-capable PWA app shell
 - No ad SDKs, analytics SDKs, external AI calls, or health-data backend
+
+## Future product ideas
+
+- Vune Garden — a gentle plant-growth experience tied to check-ins may be reconsidered in a future update after the core tracker is stable. It is not part of the current beta.
 
 ## Testing safety
 
