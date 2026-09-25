@@ -32,7 +32,10 @@ function defaultState() {
     },
     entries: {},
     journals: [],
-    assistantMessages: []
+    assistantMessages: [],
+    ui: {
+      pendingGardenGrowth: false
+    }
   };
 }
 
@@ -161,6 +164,7 @@ function normalizeState(value) {
   normalized.entries = normalized.entries || {};
   normalized.journals = Array.isArray(normalized.journals) ? normalized.journals : [];
   normalized.assistantMessages = Array.isArray(normalized.assistantMessages) ? normalized.assistantMessages : [];
+  normalized.ui = Object.assign({}, base.ui, normalized.ui || {});
   return normalized;
 }
 
@@ -426,28 +430,56 @@ function loadCheckinForDate(date) {
     input.checked = selected.has(input.value);
   });
   $("saveCheckinStatus").textContent = state.entries[date] ? "Saved entry loaded." : "";
+  const requirement = $("checkinRequirement");
+  if (requirement) requirement.hidden = true;
 }
 
 async function saveCheckin(event) {
   event.preventDefault();
   const date = $("checkinDate").value;
   if (!date) return;
-  const existed = Boolean(state.entries[date]);
+
+  const period = $("periodToday").checked;
+  const flow = $("flowSelect").value;
+  const mood = $("moodSelect").value;
   const symptoms = Array.from(document.querySelectorAll("#symptomChips input:checked")).map(function (input) { return input.value; });
+  const reflection = $("dailyReflection").value.trim();
+  const hasMeaningfulEntry = period || flow !== "none" || Boolean(mood) || symptoms.length > 0 || reflection.length > 0;
+  const requirement = $("checkinRequirement");
+
+  if (!hasMeaningfulEntry) {
+    if (requirement) {
+      requirement.hidden = false;
+      requirement.classList.remove("attention");
+      void requirement.offsetWidth;
+      requirement.classList.add("attention");
+      requirement.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+    showToast("Add at least one feeling, symptom, cycle detail, or note before watering your plant. 🌱");
+    return;
+  }
+
+  if (requirement) requirement.hidden = true;
+
+  const existed = Boolean(state.entries[date]);
   state.entries[date] = {
     date: date,
-    period: $("periodToday").checked,
-    flow: $("flowSelect").value,
-    mood: $("moodSelect").value,
+    period: period,
+    flow: flow,
+    mood: mood,
     symptoms: symptoms,
-    reflection: $("dailyReflection").value.trim(),
+    reflection: reflection,
     updatedAt: new Date().toISOString()
   };
+
+  state.ui = state.ui || {};
+  state.ui.pendingGardenGrowth = true;
+
   await persistState();
   renderAll();
   $("checkinDate").value = date;
   loadCheckinForDate(date);
-  showToast(existed ? "Updated gently 💜 Your garden is still growing." : "Saved — your plant had a drink today. 🌱💧");
+  showToast(existed ? "Updated gently 💜 Your garden is ready to show a little growth." : "Saved — your plant had a drink today. Visit your garden to watch it grow. 🌱💧");
 }
 
 function renderCalendar() {
@@ -478,6 +510,25 @@ function renderCalendar() {
   $("calendarGrid").innerHTML = html.join("");
 }
 
+function playGardenGrowth() {
+  const moment = $("growthMoment");
+  const plant = $("plantArt");
+  if (!moment || !plant) return;
+
+  moment.hidden = false;
+  moment.classList.remove("is-playing");
+  plant.classList.remove("is-growing");
+  void moment.offsetWidth;
+  moment.classList.add("is-playing");
+  plant.classList.add("is-growing");
+
+  window.setTimeout(function () {
+    moment.classList.remove("is-playing");
+    plant.classList.remove("is-growing");
+    moment.hidden = true;
+  }, 2400);
+}
+
 function renderGarden() {
   if (!state) return;
   const garden = getGardenInfo();
@@ -495,6 +546,12 @@ function renderGarden() {
       '<span class="bloom-icon">' + item.icon + '</span><div><strong>' + escapeHtml(item.label) + '</strong><small>' +
       escapeHtml(item.unlocked ? item.detail + " • unlocked" : item.detail) + '</small></div></div>';
   }).join("");
+
+  if (state.ui && state.ui.pendingGardenGrowth && $("view-garden").classList.contains("active")) {
+    state.ui.pendingGardenGrowth = false;
+    persistState();
+    window.requestAnimationFrame(playGardenGrowth);
+  }
 }
 
 async function saveJournal(event) {
@@ -611,6 +668,22 @@ function renderInsights() {
       const height = Math.max(35, Math.round((item.days / max) * 130));
       return '<div class="cycle-bar-wrap"><strong>' + item.days + 'd</strong><div class="cycle-bar" style="height:' + height + 'px"></div><small>' + escapeHtml(prettyDate(item.start, { month: "short", day: "numeric", timeZone: "UTC" })) + '</small></div>';
     }).join("");
+  }
+}
+
+function setCompanionOpen(open) {
+  const panel = $("companionPanel");
+  const launcher = $("companionLauncher");
+  if (!panel || !launcher) return;
+
+  panel.hidden = !open;
+  launcher.setAttribute("aria-expanded", String(open));
+  document.body.classList.toggle("companion-open", open);
+
+  if (open) {
+    renderAssistant();
+    const messages = $("assistantMessages");
+    if (messages) messages.scrollTop = messages.scrollHeight;
   }
 }
 
@@ -877,7 +950,10 @@ function bindEvents() {
   });
   document.addEventListener("click", function (event) {
     const go = event.target.closest("[data-go]");
-    if (go) showView(go.dataset.go);
+    if (go) {
+      showView(go.dataset.go);
+      setCompanionOpen(false);
+    }
 
     const calendarDay = event.target.closest("[data-calendar-date]");
     if (calendarDay && state) {
@@ -916,6 +992,13 @@ function bindEvents() {
   $("checkinDate").addEventListener("change", function () { if (state) loadCheckinForDate($("checkinDate").value); });
   $("journalForm").addEventListener("submit", saveJournal);
   $("assistantForm").addEventListener("submit", sendAssistant);
+
+  $("companionLauncher").addEventListener("click", function () {
+    setCompanionOpen($("companionPanel").hidden);
+  });
+  $("closeCompanionBtn").addEventListener("click", function () {
+    setCompanionOpen(false);
+  });
 
   $("prevMonth").addEventListener("click", function () {
     calendarCursor.setMonth(calendarCursor.getMonth() - 1);
@@ -956,6 +1039,12 @@ function bindEvents() {
 
   ["pointerdown", "keydown", "touchstart"].forEach(function (name) {
     document.addEventListener(name, noteActivity, { passive: true });
+  });
+
+  document.addEventListener("keydown", function (event) {
+    if (event.key === "Escape" && !$("companionPanel").hidden) {
+      setCompanionOpen(false);
+    }
   });
 
   document.addEventListener("visibilitychange", function () {
