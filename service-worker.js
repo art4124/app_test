@@ -1,6 +1,6 @@
 "use strict";
 
-const CACHE = "vune-web-v9-sept25-beta-batch";
+const CACHE = "vune-web-v10-subscription-switch-fix";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -11,6 +11,7 @@ const APP_SHELL = [
   "./app.js",
   "./corrections.js",
   "./batch-2026-09-25.js",
+  "./subscription-switch-fix.js",
   "./privacy.html",
   "./terms.html",
   "./manifest.webmanifest",
@@ -63,7 +64,8 @@ self.addEventListener("fetch", function (event) {
     event.respondWith(Promise.all([
       textFromNetworkOrCache(new URL("./app.js", self.registration.scope).href),
       textFromNetworkOrCache(new URL("./corrections.js", self.registration.scope).href),
-      textFromNetworkOrCache(new URL("./batch-2026-09-25.js", self.registration.scope).href)
+      textFromNetworkOrCache(new URL("./batch-2026-09-25.js", self.registration.scope).href),
+      textFromNetworkOrCache(new URL("./subscription-switch-fix.js", self.registration.scope).href)
     ]).then(function (parts) {
       return new Response(parts.join("\n\n"), { headers: { "Content-Type": "application/javascript; charset=utf-8", "Cache-Control": "no-cache" } });
     }));
