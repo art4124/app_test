@@ -257,3 +257,16 @@ textarea{
 #returnMessage:empty{
   display:none!important;
 }
+
+
+/* Garden retired from the current beta: let the remaining dashboard content use
+   the full width and keep the Cycle Calendar visually neutral. */
+.dashboard-grid{
+  grid-template-columns:1fr!important;
+}
+.garden-calendar-card{
+  background:var(--surface)!important;
+}
+body.theme-dark .garden-calendar-card{
+  background:var(--vune-dark-surface)!important;
+}
