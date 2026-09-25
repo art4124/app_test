@@ -1,6 +1,6 @@
 "use strict";
 
-const CACHE = "vune-web-v25-ten-accent-persistence";
+const CACHE = "vune-web-v26-journal-history-page";
 const APP_SHELL = [
   "./",
   "./index.html",
