@@ -92,3 +92,9 @@ jobs:
           grep -q 'checkin-save-confirmation' surgical-fixes-2026-09-25.css
           grep -q '✓ Check-in saved successfully' surgical-fixes-2026-09-25.js
           grep -q 'aria-live' surgical-fixes-2026-09-25.js
+
+      - name: Verify all ten accents persist
+        run: |
+          grep -q '"butter"' corrections.js
+          grep -q '"mauve"' corrections.js
+          grep -q 'VUNE_ALL_ACCENTS' batch-2026-09-25.js
