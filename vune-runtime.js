@@ -1223,10 +1223,10 @@ selectPlan = vuneSetBetaPlan;
           '<h3>'+esc(config.title || "Confirm")+'</h3>'+
           '<p class="muted">'+esc(config.message || "")+'</p>'+
           '<label>'+esc(config.label || "Passcode")+
-            '<input id="vuneSecurePrimary" type="password" minlength="6" autocomplete="'+(config.autocomplete || "current-password")+'" required>'+
+            '<input id="vuneSecurePrimary" type="password" minlength="'+String(config.minLength || 6)+'" autocomplete="'+(config.autocomplete || "current-password")+'" required>'+
           '</label>'+
           (needsConfirmation
-            ? '<label>Confirm new passcode<input id="vuneSecureConfirm" type="password" minlength="6" autocomplete="new-password" required></label>'
+            ? '<label>Confirm new passcode<input id="vuneSecureConfirm" type="password" minlength="'+String(config.minLength || 6)+'" autocomplete="new-password" required></label>'
             : '')+
           '<p id="vuneSecureError" class="form-error" role="alert"></p>'+
           '<div class="button-row"><button class="primary-btn" value="confirm" type="submit">'+esc(config.confirmLabel || "Continue")+
@@ -1250,7 +1250,7 @@ selectPlan = vuneSetBetaPlan;
         const first = dialog.querySelector("#vuneSecurePrimary").value;
         const second = needsConfirmation ? dialog.querySelector("#vuneSecureConfirm").value : null;
         const error = dialog.querySelector("#vuneSecureError");
-        if(first.length < 6){ error.textContent = "Use at least 6 characters."; return; }
+        if(first.length < (config.minLength || 6)){ error.textContent = "Use at least "+(config.minLength || 6)+" characters."; return; }
         if(needsConfirmation && first !== second){ error.textContent = "Passcodes did not match."; return; }
         finish({primary:first,confirm:second});
       });
@@ -1270,7 +1270,8 @@ selectPlan = vuneSetBetaPlan;
       label:"New passcode",
       confirm:true,
       autocomplete:"new-password",
-      confirmLabel:"Save new passcode"
+      confirmLabel:"Save new passcode",
+      minLength:8
     });
     if(!response){
       if(force) showToast("A new passcode is required before using Vune.");
