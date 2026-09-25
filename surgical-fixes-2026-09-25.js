@@ -113,7 +113,7 @@
     }
 
     if(safe("checkinRequirement")) safe("checkinRequirement").hidden = true;
-    const isNewEntry = !state.entries[date];
+    const isFirstCheckinForDate = !Object.prototype.hasOwnProperty.call(state.entries, date);
 
     state.entries[date] = {
       date: date,
@@ -125,20 +125,22 @@
       updatedAt: new Date().toISOString()
     };
 
-    /* Finishing a check-in should always complete the visible care ritual.
-       The Garden's care-day total is still derived from unique saved dates,
-       so reopening/editing today's entry cannot create a duplicate care day. */
-    state.ui.pendingGardenGrowth = true;
+    /* The care ritual is unique to the first saved check-in for a calendar day.
+       Later saves on that same date update the encrypted daily entry without
+       replaying watering or adding another care day. */
+    state.ui.pendingGardenGrowth = isFirstCheckinForDate;
 
     await persistState();
     renderAll();
     safe("checkinDate").value = date;
     loadCheckinForDate(date);
 
-    showToast(isNewEntry
-      ? "Saved — watering your plant now. 🌱💧"
-      : "Check-in updated — watering your plant now. 🌱💧");
-    showView("garden");
+    if(isFirstCheckinForDate){
+      showToast("First check-in saved — watering your plant. 🌱💧");
+      showView("garden");
+    } else {
+      showToast("Check-in updated and saved. Your plant was already cared for today. 💜");
+    }
   };
 
   /* Keep the local prototype conversational for general wellness prompts while
