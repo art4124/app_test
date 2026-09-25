@@ -1232,3 +1232,175 @@ body.companion-open .companion-launcher{animation:none}
 @media (prefers-reduced-motion:reduce){
   .companion-launcher,.companion-launcher-orb,.growth-moment.is-playing *,.plant-art.is-growing{animation:none!important}
 }
+
+
+/* --- Settings declutter pass --- */
+.settings-heading{margin-bottom:16px}
+.settings-heading h2{margin-bottom:.2rem}
+.settings-shell{
+  display:grid;
+  grid-template-columns:190px minmax(0,1fr);
+  gap:16px;
+  align-items:start;
+}
+.settings-menu{
+  position:sticky;
+  top:26px;
+  display:grid;
+  gap:7px;
+}
+.settings-tab{
+  display:grid;
+  grid-template-columns:28px minmax(0,1fr);
+  align-items:center;
+  gap:9px;
+  width:100%;
+  border:1px solid transparent;
+  border-radius:15px;
+  background:transparent;
+  padding:10px 11px;
+  color:var(--muted);
+  text-align:left;
+}
+.settings-tab > span:first-child{
+  width:28px;
+  height:28px;
+  display:grid;
+  place-items:center;
+  border-radius:9px;
+  background:#f3ebf8;
+  font-size:.82rem;
+}
+.settings-tab > span:last-child{display:grid;gap:1px}
+.settings-tab strong{font-size:.82rem;color:inherit}
+.settings-tab small{font-size:.66rem;color:var(--muted);font-weight:500}
+.settings-tab:hover{
+  background:rgba(247,240,251,.75);
+  color:var(--ink);
+}
+.settings-tab.active{
+  background:linear-gradient(135deg,#f2e8f8,#fff3f5);
+  border-color:#e2d3eb;
+  color:var(--violet);
+  box-shadow:0 8px 20px rgba(78,54,91,.06);
+}
+.danger-settings-tab.active{
+  background:#fff3f4;
+  border-color:#efd4d9;
+  color:var(--danger);
+}
+.settings-panels{
+  min-width:0;
+  border:1px solid #eadfeb;
+  border-radius:22px;
+  background:rgba(255,253,255,.84);
+  box-shadow:0 14px 38px rgba(79,55,92,.07);
+}
+.settings-panel{
+  padding:20px;
+}
+.settings-panel-heading{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:14px;
+  margin-bottom:14px;
+}
+.settings-panel-heading h3{
+  margin:.2rem 0 0;
+  font-size:1.18rem;
+}
+.settings-note{
+  padding:5px 8px;
+  border-radius:999px;
+  background:#f3ecf8;
+  color:var(--violet);
+  font-size:.66rem;
+  font-weight:800;
+  white-space:nowrap;
+}
+.settings-mini-card{
+  display:grid;
+  gap:13px;
+  max-width:560px;
+  padding:16px;
+  border:1px solid #eadfeb;
+  border-radius:16px;
+  background:linear-gradient(180deg,#fff,#fffafd);
+}
+.settings-mini-card p{margin:0}
+.settings-mini-card label{max-width:360px}
+.privacy-check-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:9px;
+  max-width:620px;
+}
+.privacy-check-grid span{
+  padding:10px 12px;
+  border-radius:13px;
+  background:#f8f3fa;
+  color:#665a6d;
+  font-size:.8rem;
+  font-weight:700;
+}
+.settings-link{
+  display:inline-block;
+  margin-top:15px;
+}
+.danger-settings-card{
+  border-color:#efd8dc;
+  background:#fff8f8;
+}
+.settings-panels .subscription-list{max-width:none}
+.settings-panels .subscription-option{padding:14px 16px}
+.settings-panels .subscription-top{
+  padding-bottom:9px;
+  margin-bottom:9px;
+}
+.settings-panels .subscription-features{
+  font-size:.77rem;
+  gap:5px 14px;
+}
+.settings-panels .subscription-price{font-size:1rem}
+
+/* Slightly tighter global copy spacing */
+.hero-soft-copy{max-width:540px;font-size:.9rem}
+.step-content > p{margin-bottom:11px}
+.checkin-title p{max-width:640px}
+.companion-launcher{min-width:132px;padding-right:13px}
+.companion-launcher-copy{display:block}
+.companion-launcher-copy small{display:none}
+
+@media (max-width:900px){
+  .settings-shell{grid-template-columns:1fr}
+  .settings-menu{
+    position:static;
+    grid-template-columns:repeat(5,minmax(0,1fr));
+    gap:6px;
+  }
+  .settings-tab{
+    grid-template-columns:1fr;
+    justify-items:center;
+    text-align:center;
+    padding:8px 5px;
+  }
+  .settings-tab > span:last-child small{display:none}
+}
+@media (max-width:600px){
+  .settings-menu{
+    display:flex;
+    overflow-x:auto;
+    padding-bottom:3px;
+    scrollbar-width:none;
+  }
+  .settings-menu::-webkit-scrollbar{display:none}
+  .settings-tab{
+    min-width:78px;
+    flex:0 0 auto;
+  }
+  .settings-panel{padding:15px}
+  .privacy-check-grid{grid-template-columns:1fr}
+  .settings-panels .subscription-features{grid-template-columns:1fr}
+  .settings-panel-heading{align-items:center}
+}
