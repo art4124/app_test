@@ -4,7 +4,7 @@
    so the lock screen can honor the user's chosen appearance before decryption. */
 const VUNE_APPEARANCE_PREF_KEY = "vune_appearance_pref_v1";
 const VUNE_ACCENT_PREF_KEY = "vune_accent_pref_v1";
-const VUNE_ACCENTS = ["lavender","blue","mint","pink","peach"];
+const VUNE_ACCENTS = ["lavender","blue","mint","pink","peach","periwinkle","aqua","sage","butter","mauve"];
 let vuneCalendarDetailDate = null;
 
 function vuneStoredAppearance(){
