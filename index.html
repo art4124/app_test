@@ -100,15 +100,13 @@
       </header>
 
       <section class="view active" id="view-today">
-        <div class="welcome-hero">
+        <div class="welcome-hero compact-home-hero">
           <div>
             <span class="eyebrow">Today in Vune</span>
             <h2 id="todayGreeting">Hi there 💜</h2>
             <p id="todayDate" class="muted"></p>
-            <p class="hero-soft-copy">A small check-in can help you understand your body a little better over time.</p>
           </div>
-          <div class="hero-flower" aria-hidden="true">🌸</div>
-          <span id="activePlanBadge" class="plan-badge">Supporter preview</span>
+          <span id="activePlanBadge" class="plan-badge">Free</span>
         </div>
 
         <div id="returnMessage" class="return-banner" hidden></div>
@@ -117,12 +115,12 @@
           <article class="card prediction-card soft-card">
             <div class="card-heading">
               <span class="card-icon">🌙</span>
-              <span>Your cycle forecast</span>
+              <span>Next period</span>
             </div>
             <strong id="predictionDate" class="hero-number">Add your first period</strong>
-            <p id="predictionDetail" class="muted">Once you log a period start, Vune can begin learning your rhythm.</p>
-            <div class="confidence-row">
-              <span>How confident is this?</span>
+            <p id="predictionDetail" class="muted">Log a period start to begin.</p>
+            <div class="confidence-row compact-confidence">
+              <span>Confidence</span>
               <span id="predictionConfidence">Still learning</span>
             </div>
           </article>
@@ -130,23 +128,22 @@
           <article class="card garden-mini-card soft-card">
             <div class="card-heading">
               <span class="card-icon">🌱</span>
-              <span>Your garden today</span>
+              <span>My garden</span>
             </div>
             <div id="miniPlant" class="mini-plant" aria-hidden="true">🌱</div>
-            <strong id="gardenMiniStatus">Ready for a little care</strong>
-            <p id="gardenMiniDetail" class="muted">One daily check-in gives your plant a drink.</p>
-            <button class="text-btn" type="button" data-go="garden">Visit my garden →</button>
+            <strong id="gardenMiniStatus">Ready for care</strong>
+            <p id="gardenMiniDetail" class="muted">0 care days</p>
+            <button class="text-btn" type="button" data-go="garden">Open garden →</button>
           </article>
         </div>
 
         <article class="card checkin-card journey-card">
-          <div class="section-title-row checkin-title">
+          <div class="section-title-row checkin-title compact-checkin-title">
             <div>
-              <span class="eyebrow">Your daily check-in</span>
+              <span class="eyebrow">Daily check-in</span>
               <h3>How are you today?</h3>
-              <p class="muted">A few gentle notes help Vune spot useful patterns. Share only what feels comfortable.</p>
             </div>
-            <span class="privacy-pill">🔐 Encrypted when saved</span>
+            <span class="privacy-pill">🔐 Private</span>
           </div>
 
           <form id="checkinForm" class="entry-journey">
@@ -154,7 +151,7 @@
               <div class="step-badge">1</div>
               <div class="step-content">
                 <h4>Let’s start with your cycle</h4>
-                <p>Is today part of your period? You can always edit this later.</p>
+                <p>Log what applies today.</p>
                 <div class="form-grid two">
                   <label>
                     Date
@@ -183,7 +180,7 @@
               <div class="step-badge">2</div>
               <div class="step-content">
                 <h4>How are you feeling?</h4>
-                <p>No “right” answer — just choose what feels closest today.</p>
+                
                 <label>
                   My mood feels…
                   <select id="moodSelect" class="mood-select">
@@ -204,7 +201,7 @@
               <div class="step-badge">3</div>
               <div class="step-content">
                 <h4>Anything your body is telling you?</h4>
-                <p>Tap anything you noticed. Leave the rest blank.</p>
+                
                 <fieldset class="symptom-fieldset">
                   <legend class="sr-only">Symptoms</legend>
                   <div class="chip-grid" id="symptomChips">
@@ -225,7 +222,7 @@
               <div class="step-badge">4</div>
               <div class="step-content">
                 <h4>A note for yourself</h4>
-                <p>You can write as little or as much as you want.</p>
+                
                 <label class="soft-label">
                   <span class="sr-only">Daily reflection</span>
                   <textarea id="dailyReflection" rows="4" maxlength="4000" placeholder="Anything you want future-you to remember about today..."></textarea>
@@ -242,21 +239,36 @@
       </section>
 
       <section class="view" id="view-calendar">
-        <div class="page-heading">
-          <div><span class="eyebrow">Your rhythm over time</span><h2>My Cycle</h2><p class="muted">Your cycle story lives here — privately, one day at a time.</p></div>
-        </div>
-        <article class="card soft-card">
-          <div class="calendar-toolbar">
-            <button id="prevMonth" class="icon-btn" type="button" aria-label="Previous month">←</button>
-            <h3 id="calendarMonthLabel"></h3>
-            <button id="nextMonth" class="icon-btn" type="button" aria-label="Next month">→</button>
+        <div class="page-heading calendar-page-heading">
+          <div>
+            <span class="eyebrow">My Cycle</span>
+            <h2>Cycle Garden</h2>
+            <p class="muted">Each day becomes a small part of your growing cycle story.</p>
           </div>
-          <div class="calendar-weekdays" aria-hidden="true"><span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span></div>
-          <div id="calendarGrid" class="calendar-grid"></div>
-          <div class="calendar-legend">
-            <span><i class="legend-dot period"></i>Period</span>
-            <span><i class="legend-dot logged"></i>Check-in</span>
-            <span><i class="legend-dot predicted"></i>Forecast</span>
+        </div>
+
+        <article class="card garden-calendar-card">
+          <div class="calendar-foliage foliage-left" aria-hidden="true"><span>❧</span><span>❧</span></div>
+          <div class="calendar-foliage foliage-right" aria-hidden="true"><span>❧</span><span>❧</span></div>
+
+          <div class="calendar-toolbar garden-calendar-toolbar">
+            <button id="prevMonth" class="icon-btn leaf-nav" type="button" aria-label="Previous month">←</button>
+            <div class="calendar-month-title">
+              <span class="tiny-sprout" aria-hidden="true">🌿</span>
+              <h3 id="calendarMonthLabel"></h3>
+            </div>
+            <button id="nextMonth" class="icon-btn leaf-nav" type="button" aria-label="Next month">→</button>
+          </div>
+
+          <div class="calendar-weekdays garden-weekdays" aria-hidden="true">
+            <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+          </div>
+          <div id="calendarGrid" class="calendar-grid garden-calendar-grid"></div>
+
+          <div class="calendar-legend garden-legend">
+            <span><i class="garden-key flower-key">✿</i>Period</span>
+            <span><i class="garden-key sprout-key">●</i>Check-in</span>
+            <span><i class="garden-key bud-key">○</i>Forecast</span>
           </div>
         </article>
       </section>
