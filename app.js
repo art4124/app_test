@@ -21,10 +21,10 @@ const planNames = { free:"Free", essential:"Essential", plus:"Plus", complete:"C
 const planOrder = { free:0, essential:1, plus:2, complete:3, supporter:4 };
 const planDetails = {
   free:{price:"$0",note:"Cycle logging + basic Garden",unlock:"Track your cycle and grow your plant"},
-  essential:{price:"$4.99 / year",note:"Free + Analytics",unlock:"Unlocks analytics"},
-  plus:{price:"$12.99 / year",note:"Essential + Bloom Notes",unlock:"Adds the private journal"},
-  complete:{price:"$24.99 / year",note:"Plus + Pattern Garden",unlock:"Adds Pattern Garden"},
-  supporter:{price:"$32.99 / year",note:"Complete + Companion",unlock:"Adds the Vune Companion"}
+  essential:{price:"$4.99 / month",note:"Free + Analytics",unlock:"Unlocks analytics"},
+  plus:{price:"$12.99 / month",note:"Essential + Bloom Notes",unlock:"Adds the private journal"},
+  complete:{price:"$24.99 / month",note:"Plus + Pattern Garden",unlock:"Adds Pattern Garden"},
+  supporter:{price:"$32.99 / month",note:"Complete + Companion",unlock:"Adds the Vune Companion"}
 };
 
 function $(id){ return document.getElementById(id); }
