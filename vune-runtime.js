@@ -1107,6 +1107,7 @@ selectPlan = vuneSetBetaPlan;
 
   /* ---------- Serialized encrypted writes ---------- */
   let vunePersistQueue = Promise.resolve();
+  let vunePersistGeneration = 0;
   persistState = function(){
     if(!state || !currentKey) return Promise.resolve(false);
 
@@ -1114,12 +1115,14 @@ selectPlan = vuneSetBetaPlan;
     state.settings.lastBackupAt = stamp;
     const snapshot = JSON.parse(JSON.stringify(state));
     const keySnapshot = currentKey;
+    const generation = vunePersistGeneration;
 
     const run = vunePersistQueue.catch(function(){ return undefined; }).then(async function(){
       const activePayload = await encryptJson(snapshot,keySnapshot);
       const recoverySalt = crypto.getRandomValues(new Uint8Array(16));
       const recoveryKey = await deriveKey(snapshot.settings.recoveryKey,recoverySalt);
       const recoveryPayload = await encryptJson(snapshot,recoveryKey);
+      if(generation !== vunePersistGeneration) return false;
 
       localStorage.setItem(DATA_KEY,activePayload);
       localStorage.setItem(RECOVERY_BACKUP_KEY,JSON.stringify({
@@ -1162,6 +1165,7 @@ selectPlan = vuneSetBetaPlan;
   /* Prevent stale unlocked tabs from overwriting a newer vault from another tab. */
   window.addEventListener("storage",function(event){
     if(event.key !== DATA_KEY || !state) return;
+    vunePersistGeneration += 1;
     state = null;
     currentKey = null;
     clearTimeout(autoLockTimer);
@@ -1765,3 +1769,53 @@ selectPlan = vuneSetBetaPlan;
     }).slice(0,limit || 30);
   };
 })();
+
+
+/* ---------- Setup protection when a restorable backup already exists ---------- */
+document.addEventListener("submit",async function(event){
+  if(!event.target || event.target.id !== "setupForm") return;
+  event.preventDefault();
+  event.stopImmediatePropagation();
+
+  const first = safe("newPasscode").value;
+  const second = safe("confirmPasscode").value;
+  if(first.length < 8){ showToast("Use at least 8 characters."); return; }
+  if(first !== second){ showToast("Passcodes do not match."); return; }
+
+  if(!hasVault() && localStorage.getItem(RECOVERY_BACKUP_KEY)){
+    const replace = confirm("An encrypted Vune Recovery Key backup is still available. Creating a new vault will replace that restorable backup. Continue with a new vault?");
+    if(!replace){
+      showToast("New vault creation cancelled. You can restore the existing backup instead.");
+      return;
+    }
+  }
+
+  try{
+    await setupVault(first);
+    safe("newPasscode").value = "";
+    safe("confirmPasscode").value = "";
+    showToast("Encrypted Vune vault created.");
+  }catch(error){
+    showToast("Could not create the encrypted vault in this browser.");
+  }
+},true);
+
+/* Improve keyboard focus when opening prototype recovery and Terms overlays. */
+const vuneAuditShowTermsGateBase = showTermsGate;
+showTermsGate = function(){
+  vuneAuditShowTermsGateBase();
+  requestAnimationFrame(function(){
+    const checkbox = safe("termsAgreeCheck");
+    if(checkbox) checkbox.focus();
+  });
+};
+
+const vuneAuditEnsureRecoveryModalBase2 = ensureRecoveryModal;
+ensureRecoveryModal = function(){
+  vuneAuditEnsureRecoveryModalBase2();
+  setTimeout(function(){
+    const modal = safe("recoveryModal");
+    const input = safe("recoveryInput");
+    if(modal && !modal.hidden && input) input.focus();
+  },0);
+};
