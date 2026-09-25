@@ -40,3 +40,12 @@ body.theme-dark .subscription-option .subscription-features,body.theme-dark .cur
 body.theme-dark .subscription-price,body.theme-dark .current-plan-price{color:#d8b9f2!important}
 body.theme-dark .plan-card .new-unlock{color:#d8b9f2!important}
 body.theme-dark .appearance-option{background:var(--vune-dark-surface-2)!important;color:var(--vune-dark-text)!important;border-color:#51485a!important}
+
+/* Beta plan switcher: keep every tier selectable while marking the active preview */
+.settings-panel[data-settings-panel="plan"] .plan-card[hidden]{display:block!important;border-color:#b89ccd!important;box-shadow:inset 0 0 0 2px rgba(125,90,166,.18)}
+.settings-panel[data-settings-panel="plan"] .plan-card[hidden]::after{content:"Current beta plan";display:inline-flex;margin-top:10px;padding:5px 8px;border-radius:999px;background:#efe4f7;color:#6f4f89;font-size:.68rem;font-weight:850;letter-spacing:.01em}
+body.theme-dark .settings-panel[data-settings-panel="plan"] .plan-card[hidden]{border-color:#8d72a4!important;box-shadow:inset 0 0 0 2px rgba(216,185,242,.16)}
+body.theme-dark .settings-panel[data-settings-panel="plan"] .plan-card[hidden]::after{background:#3b3145;color:#ead9f7}
+body.theme-dark .subscription-option:hover{transform:translateY(-2px);background:#332e3b!important;border-color:#675878!important;box-shadow:0 14px 30px rgba(0,0,0,.34),0 0 0 1px rgba(216,185,242,.10)!important}
+body.theme-dark .subscription-option:focus-visible{background:#332e3b!important;border-color:#806b93!important;box-shadow:0 12px 28px rgba(0,0,0,.30),0 0 0 2px rgba(216,185,242,.16)!important}
+@media(prefers-reduced-motion:reduce){body.theme-dark .subscription-option:hover{transform:none}}
