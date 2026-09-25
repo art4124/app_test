@@ -17,9 +17,11 @@ The passcode and derived CryptoKey are not stored in local storage.
 3. No advertising SDK is present.
 4. No external AI endpoint is present.
 5. User-authored strings are escaped or inserted with textContent when rendered.
-6. The page Content Security Policy blocks remote scripts and outbound connect-src requests.
+6. The page Content Security Policy blocks remote scripts and outbound connect-src requests. GitHub Pages does not let this prototype set every production security header; anti-framing must be enforced with response headers in production.
 7. The service worker caches only the static application shell, not user health records.
-8. Encrypted backups contain the salt and ciphertext payload, not plaintext Vune state.
+8. Encrypted Recovery Key backups contain the salt and ciphertext payload, not plaintext Vune state.
+
+9. If the encrypted vault changes in another same-origin tab while Vune is unlocked, the stale tab locks instead of writing over the newer state.
 
 ## Browser prototype limitations
 
@@ -39,6 +41,7 @@ Before TestFlight / production:
 - Verify on-device AI boundaries.
 - Perform OWASP MASVS-based review and targeted security testing.
 - Verify App Store privacy disclosures match real data flows.
+- Enforce framing protection and other security headers at the production hosting layer.
 - Conduct an independent security assessment before scaling public use.
 
 ## Reporting
