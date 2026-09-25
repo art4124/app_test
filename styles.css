@@ -1488,3 +1488,242 @@ body.companion-open .companion-launcher{animation:none}
     font-size:.9rem;
   }
 }
+
+
+/* --- Home declutter + Cycle Garden calendar --- */
+.compact-home-hero{
+  min-height:auto;
+  padding:20px 22px;
+  align-items:center;
+}
+.compact-home-hero h2{
+  margin:.2rem 0 .2rem;
+  font-size:1.9rem;
+}
+.compact-home-hero .muted{margin:0}
+.compact-home-hero .plan-badge{align-self:center}
+.compact-checkin-title{
+  padding-top:18px;
+  padding-bottom:16px;
+}
+.compact-checkin-title h3{margin-bottom:0}
+.compact-confidence{
+  margin-top:10px;
+  padding-top:9px;
+}
+.dashboard-grid{
+  gap:14px;
+  margin-bottom:16px;
+}
+.dashboard-grid .card{
+  padding:18px;
+}
+.dashboard-grid .hero-number{
+  margin-top:10px;
+}
+.dashboard-grid .muted{
+  margin-top:5px;
+  margin-bottom:0;
+}
+.entry-journey .journey-step{
+  padding-top:19px;
+  padding-bottom:19px;
+}
+.step-content h4{
+  margin-bottom:8px;
+}
+
+/* Cycle Garden */
+.calendar-page-heading{
+  margin-bottom:14px;
+}
+.calendar-page-heading h2{
+  margin:.2rem 0 .2rem;
+}
+.garden-calendar-card{
+  position:relative;
+  overflow:hidden;
+  padding:20px 22px 18px;
+  background:
+    radial-gradient(circle at 12% 0%,rgba(223,237,218,.55),transparent 30%),
+    radial-gradient(circle at 92% 8%,rgba(232,215,241,.45),transparent 28%),
+    linear-gradient(180deg,#fffefb,#fbf8fc);
+}
+.calendar-foliage{
+  position:absolute;
+  z-index:0;
+  display:flex;
+  gap:2px;
+  color:#90aa8d;
+  opacity:.16;
+  font-size:4.5rem;
+  line-height:.7;
+  pointer-events:none;
+}
+.foliage-left{
+  left:-18px;
+  top:8px;
+  transform:rotate(-25deg);
+}
+.foliage-right{
+  right:-20px;
+  bottom:4px;
+  transform:rotate(155deg);
+}
+.garden-calendar-toolbar,
+.garden-weekdays,
+.garden-calendar-grid,
+.garden-legend{
+  position:relative;
+  z-index:1;
+}
+.garden-calendar-toolbar{
+  padding:2px 0 16px;
+}
+.calendar-month-title{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+}
+.calendar-month-title h3{
+  margin:0;
+  font-size:1.18rem;
+}
+.tiny-sprout{
+  font-size:.95rem;
+}
+.leaf-nav{
+  background:#f5f8f1;
+  border-color:#dce8d7;
+  color:#61775f;
+}
+.leaf-nav:hover{
+  background:#edf4e9;
+}
+.garden-weekdays{
+  padding:0 2px 7px;
+}
+.garden-weekdays span{
+  color:#7f8f7e;
+  font-weight:800;
+  letter-spacing:.03em;
+}
+.garden-calendar-grid{
+  gap:7px;
+}
+.garden-day{
+  position:relative;
+  min-height:76px;
+  border:1px solid #e8e2ea;
+  border-radius:16px;
+  background:rgba(255,255,255,.82);
+  transition:transform .15s ease,border-color .15s ease,box-shadow .15s ease,background .15s ease;
+}
+.garden-day:hover{
+  transform:translateY(-1px);
+  border-color:#ccdcbf;
+  box-shadow:0 8px 18px rgba(79,101,76,.08);
+}
+.garden-day.today{
+  box-shadow:inset 0 0 0 2px #8aa487,0 7px 18px rgba(72,92,70,.08);
+}
+.garden-day.today .day-number{
+  color:#537050;
+  font-weight:900;
+}
+.garden-day.logged-day{
+  background:
+    radial-gradient(circle at 82% 18%,rgba(207,226,201,.32),transparent 28%),
+    rgba(255,255,255,.92);
+}
+.garden-day.period-day{
+  background:
+    radial-gradient(circle at 78% 20%,rgba(238,203,216,.48),transparent 32%),
+    linear-gradient(180deg,#fffafd,#fffefe);
+  border-color:#e8cfda;
+}
+.garden-day.predicted-day:not(.period-day){
+  background:
+    radial-gradient(circle at 82% 18%,rgba(223,211,235,.36),transparent 30%),
+    rgba(255,255,255,.88);
+}
+.garden-day.muted-day{
+  opacity:.42;
+  background:rgba(252,250,252,.68);
+}
+.garden-day-markers{
+  position:absolute;
+  left:8px;
+  right:8px;
+  bottom:7px;
+  min-height:18px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:4px;
+}
+.garden-day-marker{
+  font-style:normal;
+  line-height:1;
+}
+.period-marker{
+  color:#bd6f8d;
+  font-size:1rem;
+}
+.logged-marker{
+  color:#789a73;
+  font-size:.58rem;
+}
+.predicted-marker{
+  color:#9e83b3;
+  font-size:.72rem;
+}
+.garden-legend{
+  margin-top:14px;
+  padding-top:12px;
+  border-top:1px solid rgba(222,214,225,.8);
+}
+.garden-legend span{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  color:#746a79;
+}
+.garden-key{
+  width:18px;
+  display:inline-grid;
+  place-items:center;
+  font-style:normal;
+}
+.flower-key{color:#bd6f8d;font-size:1rem}
+.sprout-key{color:#789a73;font-size:.62rem}
+.bud-key{color:#9e83b3;font-size:.76rem}
+
+@media (max-width:760px){
+  .compact-home-hero{
+    padding:18px;
+  }
+  .compact-home-hero h2{
+    font-size:1.65rem;
+  }
+  .garden-calendar-card{
+    padding:16px 10px 14px;
+  }
+  .garden-calendar-grid{
+    gap:4px;
+  }
+  .garden-day{
+    min-height:61px;
+    border-radius:12px;
+    padding:5px;
+  }
+  .garden-day-markers{
+    bottom:5px;
+    gap:2px;
+  }
+  .period-marker{font-size:.86rem}
+  .logged-marker{font-size:.5rem}
+  .predicted-marker{font-size:.65rem}
+  .calendar-foliage{font-size:3.2rem}
+}
