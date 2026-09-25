@@ -2588,3 +2588,31 @@ body.theme-dark .vune-secure-card{
 .vune-framed body{
   display:none!important;
 }
+
+
+/* Final audit: theme completeness and subscription helper cleanup. */
+body.theme-dark .privacy-curtain{
+  background:var(--vune-dark-bg)!important;
+  color:var(--vune-dark-text)!important;
+}
+body.theme-dark .privacy-curtain-card{
+  color:var(--vune-dark-muted)!important;
+}
+body.theme-dark .report-dialog{
+  background:var(--vune-dark-surface)!important;
+  color:var(--vune-dark-text)!important;
+}
+body.theme-dark .report-dialog-header,
+body.theme-dark .report-actions{
+  border-color:#51485a!important;
+}
+body.theme-dark .report-metric{
+  background:var(--vune-dark-surface-2)!important;
+  color:var(--vune-dark-text)!important;
+}
+body.theme-dark .report-metric small{
+  color:var(--vune-dark-muted)!important;
+}
+body .plan-card .new-unlock::before{
+  content:none!important;
+}
