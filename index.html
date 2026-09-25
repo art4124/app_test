@@ -82,7 +82,6 @@
         <button class="nav-btn" data-view="garden"><span>✿</span>My Garden</button>
         <button class="nav-btn" data-view="journal"><span>♡</span>Bloom Notes</button>
         <button class="nav-btn" data-view="insights"><span>〰</span>Patterns</button>
-        <button class="nav-btn" data-view="assistant"><span>✦</span>Vune Companion</button>
         <button class="nav-btn" data-view="settings"><span>⚙</span>Privacy & Comfort</button>
       </nav>
       <div class="sidebar-footer">
@@ -231,6 +230,7 @@
                   <span class="sr-only">Daily reflection</span>
                   <textarea id="dailyReflection" rows="4" maxlength="4000" placeholder="Anything you want future-you to remember about today..."></textarea>
                 </label>
+                <p id="checkinRequirement" class="entry-requirement" role="alert" hidden>Choose at least one feeling, symptom, flow/period option, or write a note so your plant has something to grow from. 🌱</p>
                 <div class="form-actions">
                   <button class="primary-btn delight-btn" type="submit">Finish today’s check-in 💧</button>
                   <span id="saveCheckinStatus" class="muted"></span>
@@ -269,6 +269,13 @@
         <div class="garden-layout">
           <article class="card garden-stage-card">
             <div id="gardenScene" class="garden-scene" aria-label="Your current Vune plant">
+              <div id="growthMoment" class="growth-moment" aria-hidden="true" hidden>
+                <span class="growth-drop">💧</span>
+                <span class="growth-ring ring-one"></span>
+                <span class="growth-ring ring-two"></span>
+                <span class="growth-sparkle sparkle-one">✦</span>
+                <span class="growth-sparkle sparkle-two">✦</span>
+              </div>
               <div class="garden-sky"><span class="sun-orb"></span><span class="garden-sparkle one">✦</span><span class="garden-sparkle two">✦</span></div>
               <div class="garden-ground"></div>
               <div id="plantArt" class="plant-art stage-0">
@@ -304,38 +311,50 @@
 
       <section class="view" id="view-journal">
         <div class="page-heading">
-          <div><span class="eyebrow">A private place to exhale</span><h2>Bloom Notes 💜</h2><p class="muted">Thoughts, symptoms, feelings, or anything you want to remember — kept inside your encrypted Vune space.</p></div>
+          <div><span class="eyebrow">A private place to exhale</span><h2>Bloom Notes 💜</h2><p class="muted">Your own quiet pages for thoughts, symptoms, feelings, and little things you want to remember.</p></div>
           <span class="privacy-pill">🔐 Stays local</span>
         </div>
 
-        <article class="card journal-compose-card">
-          <div class="journal-intro">
-            <span class="journal-orb">✎</span>
-            <div>
-              <h3>What would you like to capture today?</h3>
-              <p class="muted">Start anywhere. These prompts are here only if they help.</p>
+        <article class="journal-book">
+          <div class="journal-binding" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
+          <div class="journal-paper">
+            <div class="journal-page-heading">
+              <div>
+                <span class="eyebrow">Today’s page</span>
+                <h3>What would you like to keep?</h3>
+                <p>Start anywhere. A journal doesn’t need to be polished — it just needs to be yours.</p>
+              </div>
+              <span class="journal-page-mark" aria-hidden="true">✿</span>
             </div>
+
+            <div class="journal-prompts journal-bookmarks">
+              <button type="button" data-journal-prompt="What stood out today? ">What stood out?</button>
+              <button type="button" data-journal-prompt="How did my body feel today? ">How did my body feel?</button>
+              <button type="button" data-journal-prompt="Something I want to remember later: ">Remember this</button>
+              <button type="button" data-journal-prompt="Something I may want to mention at an appointment: ">For an appointment</button>
+            </div>
+
+            <form id="journalForm" class="journal-form">
+              <div class="journal-meta-row">
+                <label>Date<input id="journalDate" type="date" required></label>
+                <label>Title <span class="label-optional">optional</span><input id="journalTitle" type="text" maxlength="100" placeholder="A few words for this page..."></label>
+              </div>
+              <label class="journal-writing-label">Your page
+                <textarea id="journalText" class="journal-writing-area" rows="11" maxlength="12000" required placeholder="Write whatever feels worth keeping..."></textarea>
+              </label>
+              <div class="journal-save-row">
+                <p>Private, encrypted, and yours to edit or delete.</p>
+                <button class="primary-btn delight-btn" type="submit">Save this page 🔐</button>
+              </div>
+            </form>
           </div>
-          <div class="journal-prompts">
-            <button type="button" data-journal-prompt="What stood out today? ">What stood out today?</button>
-            <button type="button" data-journal-prompt="How did my body feel today? ">How did my body feel?</button>
-            <button type="button" data-journal-prompt="Something I want to remember later: ">Something to remember</button>
-            <button type="button" data-journal-prompt="Something I may want to mention at an appointment: ">Appointment note</button>
-          </div>
-          <form id="journalForm">
-            <div class="form-grid two">
-              <label>Date<input id="journalDate" type="date" required></label>
-              <label>Give this note a title <span class="label-optional">optional</span><input id="journalTitle" type="text" maxlength="100" placeholder="Today felt different..."></label>
-            </div>
-            <label>Your note<textarea id="journalText" rows="8" maxlength="12000" required placeholder="Write about symptoms, emotions, changes, or anything on your mind..."></textarea></label>
-            <div class="journal-save-row">
-              <p class="muted">Only you should decide what belongs here.</p>
-              <button class="primary-btn delight-btn" type="submit">Save private note 🔐</button>
-            </div>
-          </form>
         </article>
 
-        <div id="journalList" class="journal-list"></div>
+        <div class="journal-history-heading">
+          <span class="eyebrow">Earlier pages</span>
+          <h3>Your Bloom Notes</h3>
+        </div>
+        <div id="journalList" class="journal-list journal-pages"></div>
       </section>
 
       <section class="view" id="view-insights">
@@ -367,53 +386,6 @@
         </article>
       </section>
 
-      <section class="view" id="view-assistant">
-        <div class="page-heading">
-          <div><span class="eyebrow">Supporter preview</span><h2>Vune Companion ✦</h2><p class="muted">A gentle, private helper for making sense of what you’ve tracked.</p></div>
-          <span class="privacy-pill">🌿 Local prototype</span>
-        </div>
-
-        <div id="assistantGate" class="card paywall-card" hidden>
-          <span class="paywall-icon">✦</span>
-          <h3>Your Vune Companion comes with Supporter</h3>
-          <p>Switch to the Supporter preview to try gentle summaries, pattern help, and appointment prep.</p>
-          <button class="primary-btn" type="button" data-go="settings">See the plans</button>
-        </div>
-
-        <div id="assistantExperience">
-          <div class="assistant-layout">
-            <article class="card assistant-card companion-card">
-              <div class="companion-header">
-                <span class="companion-avatar">✦</span>
-                <div><strong>Vune Companion</strong><small>Here to help you notice, not diagnose.</small></div>
-              </div>
-              <div id="assistantMessages" class="assistant-messages" aria-live="polite"></div>
-              <div class="assistant-prompts">
-                <button type="button" data-assistant-prompt="Give me a gentle summary of my recent patterns.">Give me a gentle summary</button>
-                <button type="button" data-assistant-prompt="What symptoms have I been logging most often?">What keeps showing up?</button>
-                <button type="button" data-assistant-prompt="Help me get ready for a doctor appointment.">Help me prep for an appointment</button>
-                <button type="button" data-assistant-prompt="What should I keep an eye on in my tracking?">What should I keep an eye on?</button>
-              </div>
-              <form id="assistantForm" class="assistant-input">
-                <label class="sr-only" for="assistantPrompt">Ask Vune</label>
-                <textarea id="assistantPrompt" rows="2" maxlength="1000" placeholder="Ask about anything you’ve been tracking..."></textarea>
-                <button class="primary-btn delight-btn" type="submit">Ask Vune ✦</button>
-              </form>
-              <small class="muted">For testing, this Companion uses local rules instead of a cloud AI model. Nothing you type here is sent to an AI provider.</small>
-            </article>
-
-            <aside class="card assistant-side soft-card">
-              <span class="eyebrow">When you want the bigger picture</span>
-              <h3>Health Summary</h3>
-              <p>Turn what you’ve tracked into a tidy summary you can review before an appointment.</p>
-              <button id="generateReportBtn" class="secondary-btn" type="button">Create my summary</button>
-              <hr>
-              <small>Vune organizes your records. A clinician interprets symptoms and diagnoses conditions.</small>
-            </aside>
-          </div>
-        </div>
-      </section>
-
       <section class="view" id="view-settings">
         <div class="page-heading">
           <div><span class="eyebrow">Make Vune feel like yours</span><h2>Privacy & Comfort</h2><p class="muted">Your plan, security, backups, and privacy controls all live here.</p></div>
@@ -421,12 +393,27 @@
 
         <article class="card soft-card">
           <div class="section-title-row"><div><span class="eyebrow">Try the experience</span><h3>Preview a plan</h3><p class="muted">No payment is collected in this web prototype.</p></div></div>
-          <div class="plan-grid" id="planGrid">
-            <button class="plan-card" data-plan="free"><strong>Free</strong><span>$0</span><small>Core tracking + Garden</small></button>
-            <button class="plan-card" data-plan="essential"><strong>Essential</strong><span>$4.99/yr</span><small>Expanded daily tracking</small></button>
-            <button class="plan-card" data-plan="plus"><strong>Plus</strong><span>$12.99/yr</span><small>Deeper cycle patterns</small></button>
-            <button class="plan-card" data-plan="complete"><strong>Complete</strong><span>$24.99/yr</span><small>Full personal insights</small></button>
-            <button class="plan-card supporter-plan" data-plan="supporter"><strong>Supporter ✦</strong><span>$32.99/yr</span><small>Private Companion + Health Summary</small></button>
+          <div class="plan-grid subscription-list" id="planGrid">
+            <button class="plan-card subscription-option" data-plan="free">
+              <span class="subscription-top"><strong>Free</strong><span class="subscription-price">$0</span></span>
+              <span class="subscription-features"><span>✓ Core period & cycle tracking</span><span>✓ Daily check-ins</span><span>✓ Vune Garden</span><span>✓ Basic cycle forecast</span></span>
+            </button>
+            <button class="plan-card subscription-option" data-plan="essential">
+              <span class="subscription-top"><strong>Essential</strong><span class="subscription-price">$4.99 <small>/ year</small></span></span>
+              <span class="subscription-features"><span>✓ Everything in Free</span><span>✓ Expanded tracking history</span><span>✓ More detailed daily tracking</span><span>✓ Custom reminders in the native app</span></span>
+            </button>
+            <button class="plan-card subscription-option" data-plan="plus">
+              <span class="subscription-top"><strong>Plus</strong><span class="subscription-price">$12.99 <small>/ year</small></span></span>
+              <span class="subscription-features"><span>✓ Everything in Essential</span><span>✓ Deeper symptom & mood patterns</span><span>✓ Custom tags</span><span>✓ Enhanced personalization</span></span>
+            </button>
+            <button class="plan-card subscription-option" data-plan="complete">
+              <span class="subscription-top"><strong>Complete</strong><span class="subscription-price">$24.99 <small>/ year</small></span></span>
+              <span class="subscription-features"><span>✓ Everything in Plus</span><span>✓ Full personal analytics</span><span>✓ Encrypted backup & sync tools</span><span>✓ Advanced cycle dashboards</span></span>
+            </button>
+            <button class="plan-card subscription-option supporter-plan" data-plan="supporter">
+              <span class="subscription-top"><span><strong>Supporter ✦</strong><em class="recommended-tag">Full Vune experience</em></span><span class="subscription-price">$32.99 <small>/ year</small></span></span>
+              <span class="subscription-features"><span>✓ Everything in Complete</span><span>✓ Vune Companion</span><span>✓ Appointment preparation</span><span>✓ Health Summary & advanced exports</span></span>
+            </button>
           </div>
         </article>
 
@@ -489,6 +476,49 @@
       <button class="nav-btn" data-view="journal"><span>♡</span><small>Notes</small></button>
       <button class="nav-btn" data-view="settings"><span>⚙</span><small>More</small></button>
     </nav>
+
+    <div id="companionWidget" class="companion-widget">
+      <section id="companionPanel" class="companion-panel" aria-label="Vune Companion" hidden>
+        <header class="companion-panel-header">
+          <div class="companion-header">
+            <span class="companion-avatar">✦</span>
+            <div><strong>Vune Companion</strong><small>Here to help you notice, not diagnose.</small></div>
+          </div>
+          <button id="closeCompanionBtn" class="icon-btn companion-close" type="button" aria-label="Close Vune Companion">×</button>
+        </header>
+
+        <div id="assistantGate" class="companion-gate" hidden>
+          <span class="paywall-icon">✦</span>
+          <h3>Your Companion comes with Supporter</h3>
+          <p>Switch to the Supporter preview to try gentle summaries, pattern help, and appointment prep.</p>
+          <button class="primary-btn" type="button" data-go="settings">See the plans</button>
+        </div>
+
+        <div id="assistantExperience" class="companion-experience">
+          <div id="assistantMessages" class="assistant-messages companion-messages" aria-live="polite"></div>
+          <div class="assistant-prompts companion-prompts">
+            <button type="button" data-assistant-prompt="Give me a gentle summary of my recent patterns.">Gentle summary</button>
+            <button type="button" data-assistant-prompt="What symptoms have I been logging most often?">What keeps showing up?</button>
+            <button type="button" data-assistant-prompt="Help me get ready for a doctor appointment.">Appointment prep</button>
+          </div>
+          <form id="assistantForm" class="assistant-input companion-input">
+            <label class="sr-only" for="assistantPrompt">Ask Vune</label>
+            <textarea id="assistantPrompt" rows="2" maxlength="1000" placeholder="Ask about what you’ve been tracking..."></textarea>
+            <button class="primary-btn" type="submit">Ask ✦</button>
+          </form>
+          <div class="companion-footer">
+            <small>Local test experience • no outside AI calls</small>
+            <button id="generateReportBtn" class="text-btn" type="button">Create Health Summary</button>
+          </div>
+        </div>
+      </section>
+
+      <button id="companionLauncher" class="companion-launcher" type="button" aria-expanded="false" aria-controls="companionPanel">
+        <span class="companion-launcher-orb" aria-hidden="true">✦</span>
+        <span class="companion-launcher-copy"><strong>Ask Vune</strong><small>Your Companion is here</small></span>
+        <span class="companion-idle-dot" aria-hidden="true"></span>
+      </button>
+    </div>
   </div>
 
   <dialog id="reportDialog" class="report-dialog">
