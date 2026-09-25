@@ -54,9 +54,10 @@ jobs:
 
       - name: Verify check-in watering handoff
         run: |
-          grep -q 'state.ui.pendingGardenGrowth = true' surgical-fixes-2026-09-25.js
+          grep -q 'isFirstCheckinForDate' surgical-fixes-2026-09-25.js
+          grep -q 'state.ui.pendingGardenGrowth = isFirstCheckinForDate' surgical-fixes-2026-09-25.js
           grep -q 'showView("garden")' surgical-fixes-2026-09-25.js
-          grep -q 'watering your plant now' surgical-fixes-2026-09-25.js
+          grep -q 'already cared for today' surgical-fixes-2026-09-25.js
 
       - name: Verify saved check-in navigation
         run: |
