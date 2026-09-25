@@ -92,8 +92,7 @@
   vuneSelectBetaPlan = setBetaPlanAndSync;
   selectPlan = setBetaPlanAndSync;
 
-  /* Garden is retired from the current beta. Daily check-ins now save normally
-     without routing away from the page or triggering a care animation. */
+  /* Daily check-ins save in place and remain available in history. */
   saveCheckin = async function(ev){
     if(ev && typeof ev.preventDefault === "function") ev.preventDefault();
     if(!state) return;
@@ -123,7 +122,6 @@
       updatedAt: new Date().toISOString()
     };
 
-    if(state.ui) state.ui.pendingGardenGrowth = false;
 
     await persistState();
     renderAll();
