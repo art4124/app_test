@@ -1404,3 +1404,87 @@ body.companion-open .companion-launcher{animation:none}
   .settings-panels .subscription-features{grid-template-columns:1fr}
   .settings-panel-heading{align-items:center}
 }
+
+
+/* --- Current plan separation --- */
+.current-plan-section{
+  display:grid;
+  gap:8px;
+}
+.current-plan-card{
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  padding:16px 18px;
+  border:1px solid #d9c7e5;
+  border-radius:18px;
+  background:
+    radial-gradient(circle at 92% 12%,rgba(218,199,232,.35),transparent 32%),
+    linear-gradient(135deg,#f4ebf9,#fff5f7);
+  box-shadow:0 10px 26px rgba(83,58,98,.07);
+}
+.current-plan-main{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:18px;
+  flex:1;
+}
+.current-plan-main > div:first-child{
+  display:grid;
+  gap:3px;
+}
+.current-plan-label{
+  color:var(--violet);
+  font-size:.65rem;
+  font-weight:850;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+}
+.current-plan-main strong{
+  font-size:1.12rem;
+  color:var(--ink);
+}
+.current-plan-main small{
+  color:var(--muted);
+  font-size:.76rem;
+}
+.current-plan-price{
+  color:var(--violet);
+  font-weight:900;
+  font-size:.98rem;
+  white-space:nowrap;
+}
+.current-plan-status{
+  padding:5px 8px;
+  border-radius:999px;
+  background:#e7f0e8;
+  color:#52765a;
+  font-size:.64rem;
+  font-weight:850;
+}
+.plan-divider{
+  height:1px;
+  margin:18px 0;
+  background:linear-gradient(90deg,transparent,#e4d8e9,transparent);
+}
+.subscription-heading{
+  margin-bottom:12px;
+}
+.subscription-option[hidden]{
+  display:none!important;
+}
+@media (max-width:600px){
+  .current-plan-card{
+    align-items:flex-start;
+  }
+  .current-plan-main{
+    display:grid;
+    gap:8px;
+  }
+  .current-plan-price{
+    font-size:.9rem;
+  }
+}
