@@ -52,6 +52,12 @@ jobs:
           grep -q "#returnMessage:empty" surgical-fixes-2026-09-25.css
           grep -q "grid-template-columns:repeat(2,minmax(0,1fr))" surgical-fixes-2026-09-25.css
 
+      - name: Verify saved check-in navigation
+        run: |
+          grep -q '← Back to Calendar' batch-2026-09-25.js
+          grep -q 'data-go="calendar"' batch-2026-09-25.js
+          ! grep -q '← All check-ins</button>' batch-2026-09-25.js
+
       - name: Verify privacy guardrails
         run: |
           grep -q "connect-src 'none'" index.html
