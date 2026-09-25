@@ -22,6 +22,7 @@ jobs:
           node --check batch-2026-09-25.js
           node --check subscription-switch-fix.js
           node --check surgical-fixes-2026-09-25.js
+          node --check checkin-hotfix.js
           node --check service-worker.js
 
       - name: Check required files
