@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#6f4a9e">
+  <meta name="theme-color" content="#8b68b6">
   <meta name="description" content="Vune privacy-first period tracker web prototype">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; font-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'">
   <title>Vune — Period Tracker</title>
@@ -15,47 +15,51 @@
   <div id="privacyCurtain" class="privacy-curtain" aria-hidden="true">
     <div class="privacy-curtain-card">
       <span class="brand-mark small" aria-hidden="true">V</span>
-      <p>Vune is hidden for privacy.</p>
+      <p>Vune is tucked away for privacy. 💜</p>
     </div>
   </div>
 
   <section id="lockScreen" class="lock-screen" aria-live="polite">
-    <div class="lock-card">
+    <div class="lock-card warm-lock-card">
+      <div class="lock-art" aria-hidden="true">
+        <span>🌙</span><span>✦</span><span>🌿</span>
+      </div>
       <div class="brand-lockup">
         <span class="brand-mark">V</span>
         <div>
           <h1>Vune</h1>
-          <p>Private cycle tracking, grown gently.</p>
+          <p>Private cycle care, grown gently.</p>
         </div>
       </div>
 
       <div id="setupPanel" hidden>
-        <span class="eyebrow">First-time setup</span>
-        <h2>Create your private test vault</h2>
-        <p class="muted">Your test data is encrypted in this browser. Vune does not have a server that can recover your passcode.</p>
+        <span class="eyebrow">A private little space for you</span>
+        <h2>Let’s make your Vune vault</h2>
+        <p class="muted">Your test entries stay encrypted in this browser. We don’t have a server that can read or recover them.</p>
         <form id="setupForm" class="stack-form">
           <label>
-            Create a passcode
-            <input id="newPasscode" type="password" minlength="6" autocomplete="new-password" inputmode="numeric" required placeholder="6+ digits">
+            Choose a private passcode
+            <input id="newPasscode" type="password" minlength="6" autocomplete="new-password" inputmode="numeric" required placeholder="6+ characters">
           </label>
           <label>
-            Confirm passcode
-            <input id="confirmPasscode" type="password" minlength="6" autocomplete="new-password" inputmode="numeric" required placeholder="Repeat passcode">
+            One more time
+            <input id="confirmPasscode" type="password" minlength="6" autocomplete="new-password" inputmode="numeric" required placeholder="Repeat your passcode">
           </label>
-          <button class="primary-btn" type="submit">Create encrypted vault</button>
+          <button class="primary-btn delight-btn" type="submit">Create my private space ✨</button>
         </form>
-        <p class="security-note">For prototype testing, use fictional health information. The native app will use platform key storage and stronger device-level protections.</p>
+        <p class="security-note">For this web test, please use fictional health information. The native app will add device-level protections such as Keychain and Face ID.</p>
       </div>
 
       <div id="unlockPanel" hidden>
-        <span class="eyebrow">Welcome back</span>
-        <h2>Unlock Vune</h2>
+        <span class="eyebrow">Welcome back 🌿</span>
+        <h2>Your space is ready</h2>
+        <p class="muted">Unlock Vune whenever you’re ready to check in.</p>
         <form id="unlockForm" class="stack-form">
           <label>
-            Passcode
+            Your passcode
             <input id="unlockPasscode" type="password" autocomplete="current-password" inputmode="numeric" required placeholder="Enter passcode">
           </label>
-          <button class="primary-btn" type="submit">Unlock</button>
+          <button class="primary-btn delight-btn" type="submit">Come back in 💜</button>
         </form>
         <p id="unlockError" class="form-error" role="alert"></p>
         <button id="resetFromLock" class="text-btn danger-text" type="button">Reset this browser copy</button>
@@ -69,21 +73,21 @@
         <span class="brand-mark small">V</span>
         <div>
           <h1>Vune</h1>
-          <p>Period Tracker</p>
+          <p>Your cycle, your space</p>
         </div>
       </div>
       <nav class="side-nav" aria-label="Primary">
-        <button class="nav-btn active" data-view="today"><span>⌂</span>Today</button>
-        <button class="nav-btn" data-view="calendar"><span>▦</span>Calendar</button>
-        <button class="nav-btn" data-view="garden"><span>✿</span>Garden</button>
-        <button class="nav-btn" data-view="journal"><span>✎</span>Journal</button>
-        <button class="nav-btn" data-view="insights"><span>⌁</span>Insights</button>
-        <button class="nav-btn" data-view="assistant"><span>✦</span>Assistant</button>
-        <button class="nav-btn" data-view="settings"><span>⚙</span>Settings</button>
+        <button class="nav-btn active" data-view="today"><span>☀</span>Today in Vune</button>
+        <button class="nav-btn" data-view="calendar"><span>◔</span>My Cycle</button>
+        <button class="nav-btn" data-view="garden"><span>✿</span>My Garden</button>
+        <button class="nav-btn" data-view="journal"><span>♡</span>Bloom Notes</button>
+        <button class="nav-btn" data-view="insights"><span>〰</span>Patterns</button>
+        <button class="nav-btn" data-view="assistant"><span>✦</span>Vune Companion</button>
+        <button class="nav-btn" data-view="settings"><span>⚙</span>Privacy & Comfort</button>
       </nav>
       <div class="sidebar-footer">
-        <span class="privacy-pill">● Local-first prototype</span>
-        <button id="lockNowBtn" class="secondary-btn compact" type="button">Lock Vune</button>
+        <span class="privacy-pill">● Private on this device</span>
+        <button id="lockNowBtn" class="secondary-btn compact" type="button">Lock my space</button>
       </div>
     </aside>
 
@@ -91,126 +95,157 @@
       <header class="mobile-header">
         <div class="brand-lockup">
           <span class="brand-mark small">V</span>
-          <div><strong>Vune</strong><small>Period Tracker</small></div>
+          <div><strong>Vune</strong><small>Your cycle, your space</small></div>
         </div>
         <button id="mobileLockBtn" class="icon-btn" aria-label="Lock Vune">⌁</button>
       </header>
 
       <section class="view active" id="view-today">
-        <div class="page-heading">
+        <div class="welcome-hero">
           <div>
-            <span class="eyebrow">Today</span>
-            <h2 id="todayGreeting">Good day</h2>
+            <span class="eyebrow">Today in Vune</span>
+            <h2 id="todayGreeting">Hi there 💜</h2>
             <p id="todayDate" class="muted"></p>
+            <p class="hero-soft-copy">A small check-in can help you understand your body a little better over time.</p>
           </div>
+          <div class="hero-flower" aria-hidden="true">🌸</div>
           <span id="activePlanBadge" class="plan-badge">Supporter preview</span>
         </div>
 
         <div id="returnMessage" class="return-banner" hidden></div>
 
         <div class="dashboard-grid">
-          <article class="card prediction-card">
+          <article class="card prediction-card soft-card">
             <div class="card-heading">
-              <span class="card-icon">◐</span>
-              <span>Next period</span>
+              <span class="card-icon">🌙</span>
+              <span>Your cycle forecast</span>
             </div>
-            <strong id="predictionDate" class="hero-number">Add a period</strong>
-            <p id="predictionDetail" class="muted">Log a period start to begin predictions.</p>
+            <strong id="predictionDate" class="hero-number">Add your first period</strong>
+            <p id="predictionDetail" class="muted">Once you log a period start, Vune can begin learning your rhythm.</p>
             <div class="confidence-row">
-              <span>Prediction confidence</span>
-              <span id="predictionConfidence">Not enough data</span>
+              <span>How confident is this?</span>
+              <span id="predictionConfidence">Still learning</span>
             </div>
           </article>
 
-          <article class="card garden-mini-card">
+          <article class="card garden-mini-card soft-card">
             <div class="card-heading">
-              <span class="card-icon">❀</span>
-              <span>Vune Garden</span>
+              <span class="card-icon">🌱</span>
+              <span>Your garden today</span>
             </div>
             <div id="miniPlant" class="mini-plant" aria-hidden="true">🌱</div>
-            <strong id="gardenMiniStatus">Ready for care</strong>
-            <p id="gardenMiniDetail" class="muted">One daily check-in waters your plant.</p>
-            <button class="text-btn" type="button" data-go="garden">Visit garden →</button>
+            <strong id="gardenMiniStatus">Ready for a little care</strong>
+            <p id="gardenMiniDetail" class="muted">One daily check-in gives your plant a drink.</p>
+            <button class="text-btn" type="button" data-go="garden">Visit my garden →</button>
           </article>
         </div>
 
-        <article class="card checkin-card">
-          <div class="section-title-row">
+        <article class="card checkin-card journey-card">
+          <div class="section-title-row checkin-title">
             <div>
-              <span class="eyebrow">Daily check-in</span>
-              <h3>How are you feeling?</h3>
+              <span class="eyebrow">Your daily check-in</span>
+              <h3>How are you today?</h3>
+              <p class="muted">A few gentle notes help Vune spot useful patterns. Share only what feels comfortable.</p>
             </div>
-            <span class="privacy-pill">Encrypted when saved</span>
+            <span class="privacy-pill">🔐 Encrypted when saved</span>
           </div>
 
-          <form id="checkinForm">
-            <div class="form-grid three">
-              <label>
-                Date
-                <input id="checkinDate" type="date" required>
-              </label>
-              <label>
-                Flow
-                <select id="flowSelect">
-                  <option value="none">None</option>
-                  <option value="spotting">Spotting</option>
-                  <option value="light">Light</option>
-                  <option value="medium">Medium</option>
-                  <option value="heavy">Heavy</option>
-                </select>
-              </label>
-              <label>
-                Mood
-                <select id="moodSelect">
-                  <option value="">Not logged</option>
-                  <option value="calm">Calm</option>
-                  <option value="good">Good</option>
-                  <option value="energized">Energized</option>
-                  <option value="sensitive">Sensitive</option>
-                  <option value="irritable">Irritable</option>
-                  <option value="low">Low</option>
-                  <option value="anxious">Anxious</option>
-                </select>
-              </label>
-            </div>
-
-            <label class="period-toggle">
-              <input id="periodToday" type="checkbox">
-              <span class="toggle-ui"></span>
-              <span><strong>Period day</strong><small>Use this for each day you are bleeding.</small></span>
-            </label>
-
-            <fieldset class="symptom-fieldset">
-              <legend>Symptoms</legend>
-              <div class="chip-grid" id="symptomChips">
-                <label class="check-chip"><input type="checkbox" value="Cramps"><span>Cramps</span></label>
-                <label class="check-chip"><input type="checkbox" value="Headache"><span>Headache</span></label>
-                <label class="check-chip"><input type="checkbox" value="Fatigue"><span>Fatigue</span></label>
-                <label class="check-chip"><input type="checkbox" value="Bloating"><span>Bloating</span></label>
-                <label class="check-chip"><input type="checkbox" value="Acne"><span>Acne</span></label>
-                <label class="check-chip"><input type="checkbox" value="Back pain"><span>Back pain</span></label>
-                <label class="check-chip"><input type="checkbox" value="Breast tenderness"><span>Breast tenderness</span></label>
-                <label class="check-chip"><input type="checkbox" value="Cravings"><span>Cravings</span></label>
+          <form id="checkinForm" class="entry-journey">
+            <section class="journey-step">
+              <div class="step-badge">1</div>
+              <div class="step-content">
+                <h4>Let’s start with your cycle</h4>
+                <p>Is today part of your period? You can always edit this later.</p>
+                <div class="form-grid two">
+                  <label>
+                    Date
+                    <input id="checkinDate" type="date" required>
+                  </label>
+                  <label>
+                    How’s your flow?
+                    <select id="flowSelect">
+                      <option value="none">No flow today</option>
+                      <option value="spotting">Just spotting</option>
+                      <option value="light">Light</option>
+                      <option value="medium">Medium</option>
+                      <option value="heavy">Heavy</option>
+                    </select>
+                  </label>
+                </div>
+                <label class="period-toggle warm-toggle">
+                  <input id="periodToday" type="checkbox">
+                  <span class="toggle-ui"></span>
+                  <span><strong>Yes, this is a period day</strong><small>Turn this on for each day you’re bleeding.</small></span>
+                </label>
               </div>
-            </fieldset>
+            </section>
 
-            <label>
-              Daily reflection
-              <textarea id="dailyReflection" rows="4" maxlength="4000" placeholder="Anything you want to remember about today..."></textarea>
-            </label>
-            <div class="form-actions">
-              <button class="primary-btn" type="submit">Save & water my plant</button>
-              <span id="saveCheckinStatus" class="muted"></span>
-            </div>
+            <section class="journey-step">
+              <div class="step-badge">2</div>
+              <div class="step-content">
+                <h4>How are you feeling?</h4>
+                <p>No “right” answer — just choose what feels closest today.</p>
+                <label>
+                  My mood feels…
+                  <select id="moodSelect" class="mood-select">
+                    <option value="">I’d rather skip this</option>
+                    <option value="calm">🌿 Calm</option>
+                    <option value="good">☀️ Good</option>
+                    <option value="energized">✨ Energized</option>
+                    <option value="sensitive">💜 Sensitive</option>
+                    <option value="irritable">🌧️ Irritable</option>
+                    <option value="low">🌙 Low</option>
+                    <option value="anxious">🍃 Anxious</option>
+                  </select>
+                </label>
+              </div>
+            </section>
+
+            <section class="journey-step">
+              <div class="step-badge">3</div>
+              <div class="step-content">
+                <h4>Anything your body is telling you?</h4>
+                <p>Tap anything you noticed. Leave the rest blank.</p>
+                <fieldset class="symptom-fieldset">
+                  <legend class="sr-only">Symptoms</legend>
+                  <div class="chip-grid" id="symptomChips">
+                    <label class="check-chip"><input type="checkbox" value="Cramps"><span>💫 Cramps</span></label>
+                    <label class="check-chip"><input type="checkbox" value="Headache"><span>🌥️ Headache</span></label>
+                    <label class="check-chip"><input type="checkbox" value="Fatigue"><span>🫧 Tired</span></label>
+                    <label class="check-chip"><input type="checkbox" value="Bloating"><span>🎈 Bloated</span></label>
+                    <label class="check-chip"><input type="checkbox" value="Acne"><span>✨ Breakout</span></label>
+                    <label class="check-chip"><input type="checkbox" value="Back pain"><span>🌿 Back pain</span></label>
+                    <label class="check-chip"><input type="checkbox" value="Breast tenderness"><span>💜 Tender chest</span></label>
+                    <label class="check-chip"><input type="checkbox" value="Cravings"><span>🍓 Cravings</span></label>
+                  </div>
+                </fieldset>
+              </div>
+            </section>
+
+            <section class="journey-step final-step">
+              <div class="step-badge">4</div>
+              <div class="step-content">
+                <h4>A note for yourself</h4>
+                <p>You can write as little or as much as you want.</p>
+                <label class="soft-label">
+                  <span class="sr-only">Daily reflection</span>
+                  <textarea id="dailyReflection" rows="4" maxlength="4000" placeholder="Anything you want future-you to remember about today..."></textarea>
+                </label>
+                <div class="form-actions">
+                  <button class="primary-btn delight-btn" type="submit">Finish today’s check-in 💧</button>
+                  <span id="saveCheckinStatus" class="muted"></span>
+                </div>
+              </div>
+            </section>
           </form>
         </article>
       </section>
 
       <section class="view" id="view-calendar">
         <div class="page-heading">
-          <div><span class="eyebrow">History</span><h2>Calendar</h2><p class="muted">Your cycle history stays in your encrypted browser vault.</p></div>
+          <div><span class="eyebrow">Your rhythm over time</span><h2>My Cycle</h2><p class="muted">Your cycle story lives here — privately, one day at a time.</p></div>
         </div>
-        <article class="card">
+        <article class="card soft-card">
           <div class="calendar-toolbar">
             <button id="prevMonth" class="icon-btn" type="button" aria-label="Previous month">←</button>
             <h3 id="calendarMonthLabel"></h3>
@@ -221,20 +256,20 @@
           <div class="calendar-legend">
             <span><i class="legend-dot period"></i>Period</span>
             <span><i class="legend-dot logged"></i>Check-in</span>
-            <span><i class="legend-dot predicted"></i>Predicted</span>
+            <span><i class="legend-dot predicted"></i>Forecast</span>
           </div>
         </article>
       </section>
 
       <section class="view" id="view-garden">
         <div class="page-heading">
-          <div><span class="eyebrow">Gentle rewards</span><h2>Vune Garden</h2><p class="muted">Care for yourself, and your garden grows with you. Missed days never erase progress.</p></div>
+          <div><span class="eyebrow">A little care goes a long way</span><h2>My Garden 🌿</h2><p class="muted">Your garden grows with care, not perfection. Missed days never erase what you’ve grown.</p></div>
         </div>
 
         <div class="garden-layout">
           <article class="card garden-stage-card">
             <div id="gardenScene" class="garden-scene" aria-label="Your current Vune plant">
-              <div class="garden-sky"><span class="sun-orb"></span></div>
+              <div class="garden-sky"><span class="sun-orb"></span><span class="garden-sparkle one">✦</span><span class="garden-sparkle two">✦</span></div>
               <div class="garden-ground"></div>
               <div id="plantArt" class="plant-art stage-0">
                 <span class="stem"></span>
@@ -246,41 +281,57 @@
               </div>
             </div>
             <div class="garden-stage-copy">
-              <span class="eyebrow">Current stage</span>
+              <span class="eyebrow">Your plant today</span>
               <h3 id="plantStageName">Seed</h3>
-              <p id="plantStageMessage" class="muted">Your first check-in will water your seed.</p>
+              <p id="plantStageMessage" class="muted">Your garden is ready for its first moment of care.</p>
               <div class="progress-track"><span id="gardenProgressBar"></span></div>
               <small id="gardenProgressText"></small>
             </div>
           </article>
 
           <div class="garden-stats">
-            <article class="card stat-card"><span>💧</span><strong id="wateringsCount">0</strong><small>Days watered</small></article>
-            <article class="card stat-card"><span>🌸</span><strong id="bloomsCount">0</strong><small>Memory blooms</small></article>
-            <article class="card stat-card"><span>🌿</span><strong id="gardenAge">0</strong><small>Garden days</small></article>
+            <article class="card stat-card"><span>💧</span><strong id="wateringsCount">0</strong><small>Care days</small></article>
+            <article class="card stat-card"><span>🌸</span><strong id="bloomsCount">0</strong><small>Memory Blooms</small></article>
+            <article class="card stat-card"><span>🌿</span><strong id="gardenAge">0</strong><small>Days in bloom</small></article>
           </div>
         </div>
 
-        <article class="card memory-card">
-          <div class="section-title-row"><div><span class="eyebrow">Milestones</span><h3>Memory Blooms</h3></div></div>
+        <article class="card memory-card soft-card">
+          <div class="section-title-row"><div><span class="eyebrow">Moments worth keeping</span><h3>Memory Blooms</h3><p class="muted">Little milestones that stay in your garden permanently.</p></div></div>
           <div id="memoryBlooms" class="memory-blooms"></div>
         </article>
       </section>
 
       <section class="view" id="view-journal">
         <div class="page-heading">
-          <div><span class="eyebrow">Private reflections</span><h2>Vune Journal</h2><p class="muted">Entries are encrypted inside your local Vune vault.</p></div>
-          <span class="privacy-pill">No network access</span>
+          <div><span class="eyebrow">A private place to exhale</span><h2>Bloom Notes 💜</h2><p class="muted">Thoughts, symptoms, feelings, or anything you want to remember — kept inside your encrypted Vune space.</p></div>
+          <span class="privacy-pill">🔐 Stays local</span>
         </div>
 
-        <article class="card">
+        <article class="card journal-compose-card">
+          <div class="journal-intro">
+            <span class="journal-orb">✎</span>
+            <div>
+              <h3>What would you like to capture today?</h3>
+              <p class="muted">Start anywhere. These prompts are here only if they help.</p>
+            </div>
+          </div>
+          <div class="journal-prompts">
+            <button type="button" data-journal-prompt="What stood out today? ">What stood out today?</button>
+            <button type="button" data-journal-prompt="How did my body feel today? ">How did my body feel?</button>
+            <button type="button" data-journal-prompt="Something I want to remember later: ">Something to remember</button>
+            <button type="button" data-journal-prompt="Something I may want to mention at an appointment: ">Appointment note</button>
+          </div>
           <form id="journalForm">
             <div class="form-grid two">
               <label>Date<input id="journalDate" type="date" required></label>
-              <label>Title<input id="journalTitle" type="text" maxlength="100" placeholder="Optional title"></label>
+              <label>Give this note a title <span class="label-optional">optional</span><input id="journalTitle" type="text" maxlength="100" placeholder="Today felt different..."></label>
             </div>
-            <label>Entry<textarea id="journalText" rows="7" maxlength="12000" required placeholder="Write freely. This stays in your encrypted browser vault."></textarea></label>
-            <button class="primary-btn" type="submit">Encrypt & save entry</button>
+            <label>Your note<textarea id="journalText" rows="8" maxlength="12000" required placeholder="Write about symptoms, emotions, changes, or anything on your mind..."></textarea></label>
+            <div class="journal-save-row">
+              <p class="muted">Only you should decide what belongs here.</p>
+              <button class="primary-btn delight-btn" type="submit">Save private note 🔐</button>
+            </div>
           </form>
         </article>
 
@@ -289,72 +340,75 @@
 
       <section class="view" id="view-insights">
         <div class="page-heading">
-          <div><span class="eyebrow">Patterns, not diagnoses</span><h2>Vune Insights</h2><p class="muted">Calculated locally from what you choose to track.</p></div>
+          <div><span class="eyebrow">Patterns, not diagnoses</span><h2>Patterns</h2><p class="muted">Vune gently organizes what you’ve tracked so you can notice what repeats over time.</p></div>
         </div>
 
         <div class="insight-stat-grid">
-          <article class="card stat-card large"><small>Average cycle</small><strong id="avgCycleStat">—</strong><span>days</span></article>
-          <article class="card stat-card large"><small>Cycle range</small><strong id="cycleRangeStat">—</strong><span>days</span></article>
-          <article class="card stat-card large"><small>Tracked cycles</small><strong id="trackedCyclesStat">0</strong><span>starts</span></article>
-          <article class="card stat-card large"><small>Check-ins</small><strong id="checkinsStat">0</strong><span>days</span></article>
+          <article class="card stat-card large soft-card"><small>Usual cycle</small><strong id="avgCycleStat">—</strong><span>days on average</span></article>
+          <article class="card stat-card large soft-card"><small>Your range</small><strong id="cycleRangeStat">—</strong><span>days</span></article>
+          <article class="card stat-card large soft-card"><small>Cycles remembered</small><strong id="trackedCyclesStat">0</strong><span>starts</span></article>
+          <article class="card stat-card large soft-card"><small>Care days</small><strong id="checkinsStat">0</strong><span>check-ins</span></article>
         </div>
 
         <div class="insights-grid">
-          <article class="card">
-            <div class="section-title-row"><div><span class="eyebrow">Symptoms</span><h3>Most logged</h3></div></div>
-            <div id="symptomChart" class="bar-chart empty-state">Log symptoms to see patterns.</div>
+          <article class="card soft-card">
+            <div class="section-title-row"><div><span class="eyebrow">Your body</span><h3>What shows up most</h3></div></div>
+            <div id="symptomChart" class="bar-chart empty-state">Your symptom patterns will gently appear here as you log more.</div>
           </article>
-          <article class="card">
-            <div class="section-title-row"><div><span class="eyebrow">Mood</span><h3>Recent distribution</h3></div></div>
-            <div id="moodChart" class="bar-chart empty-state">Log moods to see patterns.</div>
+          <article class="card soft-card">
+            <div class="section-title-row"><div><span class="eyebrow">Your feelings</span><h3>Mood patterns</h3></div></div>
+            <div id="moodChart" class="bar-chart empty-state">Your mood patterns will appear here over time.</div>
           </article>
         </div>
 
-        <article class="card">
-          <div class="section-title-row">
-            <div><span class="eyebrow">Cycle history</span><h3>Recent cycle lengths</h3></div>
-          </div>
-          <div id="cycleHistory" class="cycle-history empty-state">Two period starts are needed to calculate a cycle length.</div>
+        <article class="card soft-card">
+          <div class="section-title-row"><div><span class="eyebrow">Your cycle story</span><h3>Recent cycle lengths</h3></div></div>
+          <div id="cycleHistory" class="cycle-history empty-state">Once you’ve logged two period starts, Vune can begin showing your cycle rhythm here.</div>
         </article>
       </section>
 
       <section class="view" id="view-assistant">
         <div class="page-heading">
-          <div><span class="eyebrow">Supporter preview</span><h2>Vune Assistant</h2><p class="muted">A local testing assistant that analyzes your Vune data without sending it anywhere.</p></div>
-          <span class="privacy-pill">Local prototype</span>
+          <div><span class="eyebrow">Supporter preview</span><h2>Vune Companion ✦</h2><p class="muted">A gentle, private helper for making sense of what you’ve tracked.</p></div>
+          <span class="privacy-pill">🌿 Local prototype</span>
         </div>
 
         <div id="assistantGate" class="card paywall-card" hidden>
           <span class="paywall-icon">✦</span>
-          <h3>Vune Assistant is a Supporter feature</h3>
-          <p>Switch to the Supporter preview in Settings to test the private assistant experience.</p>
-          <button class="primary-btn" type="button" data-go="settings">Preview plans</button>
+          <h3>Your Vune Companion comes with Supporter</h3>
+          <p>Switch to the Supporter preview to try gentle summaries, pattern help, and appointment prep.</p>
+          <button class="primary-btn" type="button" data-go="settings">See the plans</button>
         </div>
 
         <div id="assistantExperience">
           <div class="assistant-layout">
-            <article class="card assistant-card">
+            <article class="card assistant-card companion-card">
+              <div class="companion-header">
+                <span class="companion-avatar">✦</span>
+                <div><strong>Vune Companion</strong><small>Here to help you notice, not diagnose.</small></div>
+              </div>
               <div id="assistantMessages" class="assistant-messages" aria-live="polite"></div>
               <div class="assistant-prompts">
-                <button type="button" data-assistant-prompt="Summarize my recent cycle patterns.">Summarize my patterns</button>
-                <button type="button" data-assistant-prompt="What symptoms have I logged most often?">Common symptoms</button>
-                <button type="button" data-assistant-prompt="Help me prepare for a doctor appointment.">Appointment prep</button>
+                <button type="button" data-assistant-prompt="Give me a gentle summary of my recent patterns.">Give me a gentle summary</button>
+                <button type="button" data-assistant-prompt="What symptoms have I been logging most often?">What keeps showing up?</button>
+                <button type="button" data-assistant-prompt="Help me get ready for a doctor appointment.">Help me prep for an appointment</button>
+                <button type="button" data-assistant-prompt="What should I keep an eye on in my tracking?">What should I keep an eye on?</button>
               </div>
               <form id="assistantForm" class="assistant-input">
                 <label class="sr-only" for="assistantPrompt">Ask Vune</label>
-                <textarea id="assistantPrompt" rows="2" maxlength="1000" placeholder="Ask about patterns in what you've tracked..."></textarea>
-                <button class="primary-btn" type="submit">Ask</button>
+                <textarea id="assistantPrompt" rows="2" maxlength="1000" placeholder="Ask about anything you’ve been tracking..."></textarea>
+                <button class="primary-btn delight-btn" type="submit">Ask Vune ✦</button>
               </form>
-              <small class="muted">Prototype note: this version uses local rules, not a cloud AI model. It is for testing the Assistant experience and privacy flow.</small>
+              <small class="muted">For testing, this Companion uses local rules instead of a cloud AI model. Nothing you type here is sent to an AI provider.</small>
             </article>
 
-            <aside class="card assistant-side">
-              <span class="eyebrow">Supporter</span>
+            <aside class="card assistant-side soft-card">
+              <span class="eyebrow">When you want the bigger picture</span>
               <h3>Health Summary</h3>
-              <p>Create a clinician-friendly summary from your selected tracking history. Generated locally.</p>
-              <button id="generateReportBtn" class="secondary-btn" type="button">Generate summary</button>
+              <p>Turn what you’ve tracked into a tidy summary you can review before an appointment.</p>
+              <button id="generateReportBtn" class="secondary-btn" type="button">Create my summary</button>
               <hr>
-              <small>This tool organizes your records. It does not diagnose medical conditions.</small>
+              <small>Vune organizes your records. A clinician interprets symptoms and diagnoses conditions.</small>
             </aside>
           </div>
         </div>
@@ -362,48 +416,48 @@
 
       <section class="view" id="view-settings">
         <div class="page-heading">
-          <div><span class="eyebrow">Prototype controls</span><h2>Settings & Privacy</h2><p class="muted">Everything here affects only this browser copy of Vune.</p></div>
+          <div><span class="eyebrow">Make Vune feel like yours</span><h2>Privacy & Comfort</h2><p class="muted">Your plan, security, backups, and privacy controls all live here.</p></div>
         </div>
 
-        <article class="card">
-          <div class="section-title-row"><div><span class="eyebrow">Pricing test</span><h3>Preview a plan</h3><p class="muted">No payment is collected in this web prototype.</p></div></div>
+        <article class="card soft-card">
+          <div class="section-title-row"><div><span class="eyebrow">Try the experience</span><h3>Preview a plan</h3><p class="muted">No payment is collected in this web prototype.</p></div></div>
           <div class="plan-grid" id="planGrid">
             <button class="plan-card" data-plan="free"><strong>Free</strong><span>$0</span><small>Core tracking + Garden</small></button>
-            <button class="plan-card" data-plan="essential"><strong>Essential</strong><span>$4.99/yr</span><small>Expanded tracking</small></button>
-            <button class="plan-card" data-plan="plus"><strong>Plus</strong><span>$12.99/yr</span><small>Deeper patterns</small></button>
+            <button class="plan-card" data-plan="essential"><strong>Essential</strong><span>$4.99/yr</span><small>Expanded daily tracking</small></button>
+            <button class="plan-card" data-plan="plus"><strong>Plus</strong><span>$12.99/yr</span><small>Deeper cycle patterns</small></button>
             <button class="plan-card" data-plan="complete"><strong>Complete</strong><span>$24.99/yr</span><small>Full personal insights</small></button>
-            <button class="plan-card" data-plan="supporter"><strong>Supporter</strong><span>$32.99/yr</span><small>Assistant + Health Summary</small></button>
+            <button class="plan-card supporter-plan" data-plan="supporter"><strong>Supporter ✦</strong><span>$32.99/yr</span><small>Private Companion + Health Summary</small></button>
           </div>
         </article>
 
         <div class="settings-grid">
-          <article class="card">
-            <span class="eyebrow">Security</span>
-            <h3>Auto-lock</h3>
-            <label>Lock after
+          <article class="card soft-card">
+            <span class="eyebrow">Your lock</span>
+            <h3>When should Vune lock?</h3>
+            <label>Lock my space after
               <select id="lockMinutesSelect">
-                <option value="0">Immediately when hidden</option>
+                <option value="0">Right away when I leave</option>
                 <option value="1">1 minute</option>
                 <option value="5">5 minutes</option>
                 <option value="15">15 minutes</option>
               </select>
             </label>
-            <button id="changePasscodeBtn" class="secondary-btn" type="button">Change passcode</button>
+            <button id="changePasscodeBtn" class="secondary-btn" type="button">Change my passcode</button>
           </article>
 
-          <article class="card">
-            <span class="eyebrow">Encrypted backup</span>
-            <h3>Your data, your copy</h3>
-            <p class="muted">Export a ciphertext backup that can be restored in this prototype with the same passcode.</p>
+          <article class="card soft-card">
+            <span class="eyebrow">Keep a copy</span>
+            <h3>Encrypted backup</h3>
+            <p class="muted">Save an encrypted copy you can restore later with the same passcode.</p>
             <div class="button-row">
-              <button id="exportBackupBtn" class="secondary-btn" type="button">Export encrypted backup</button>
-              <label class="secondary-btn file-btn">Import backup<input id="importBackupInput" type="file" accept="application/json,.json"></label>
+              <button id="exportBackupBtn" class="secondary-btn" type="button">Save encrypted backup</button>
+              <label class="secondary-btn file-btn">Restore backup<input id="importBackupInput" type="file" accept="application/json,.json"></label>
             </div>
           </article>
 
-          <article class="card">
-            <span class="eyebrow">Privacy</span>
-            <h3>Prototype guarantees</h3>
+          <article class="card soft-card">
+            <span class="eyebrow">Your privacy</span>
+            <h3>What this prototype avoids</h3>
             <ul class="clean-list">
               <li>No analytics SDK</li>
               <li>No ad SDK</li>
@@ -411,35 +465,35 @@
               <li>No health-data server</li>
               <li>Encrypted local vault</li>
             </ul>
-            <a class="text-link" href="privacy.html">Read prototype privacy notes →</a>
+            <a class="text-link" href="privacy.html">Read the privacy notes →</a>
           </article>
 
           <article class="card danger-card">
-            <span class="eyebrow">Danger zone</span>
-            <h3>Delete this browser copy</h3>
-            <p class="muted">This deletes the encrypted Vune vault from this browser. It cannot be undone without an exported backup.</p>
-            <button id="deleteAllBtn" class="danger-btn" type="button">Delete all Vune data</button>
+            <span class="eyebrow">Reset this copy</span>
+            <h3>Delete my Vune data</h3>
+            <p class="muted">This removes the encrypted Vune vault from this browser. An exported backup is the only way to bring it back.</p>
+            <button id="deleteAllBtn" class="danger-btn" type="button">Delete this browser copy</button>
           </article>
         </div>
       </section>
 
       <footer class="app-footer">
-        <p>Vune web prototype • Use fictional data for product testing • Not medical advice</p>
+        <p>Vune web prototype • Please use fictional data for testing • Not medical advice</p>
       </footer>
     </main>
 
     <nav class="mobile-nav" aria-label="Mobile primary">
-      <button class="nav-btn active" data-view="today"><span>⌂</span><small>Today</small></button>
-      <button class="nav-btn" data-view="calendar"><span>▦</span><small>Calendar</small></button>
+      <button class="nav-btn active" data-view="today"><span>☀</span><small>Today</small></button>
+      <button class="nav-btn" data-view="calendar"><span>◔</span><small>Cycle</small></button>
       <button class="nav-btn" data-view="garden"><span>✿</span><small>Garden</small></button>
-      <button class="nav-btn" data-view="journal"><span>✎</span><small>Journal</small></button>
+      <button class="nav-btn" data-view="journal"><span>♡</span><small>Notes</small></button>
       <button class="nav-btn" data-view="settings"><span>⚙</span><small>More</small></button>
     </nav>
   </div>
 
   <dialog id="reportDialog" class="report-dialog">
     <div class="report-dialog-header">
-      <div><span class="eyebrow">Supporter</span><h2>Vune Health Summary</h2></div>
+      <div><span class="eyebrow">A clearer picture for your appointment</span><h2>Vune Health Summary</h2></div>
       <button id="closeReportBtn" class="icon-btn" type="button" aria-label="Close report">×</button>
     </div>
     <div id="reportContent" class="report-content"></div>
