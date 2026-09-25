@@ -22,12 +22,20 @@ const planNames = {
   supporter: "Supporter"
 };
 
+const planDetails = {
+  free: { price: "$0", note: "Core tracking + Garden" },
+  essential: { price: "$4.99 / year", note: "Expanded daily tracking" },
+  plus: { price: "$12.99 / year", note: "Deeper cycle patterns" },
+  complete: { price: "$24.99 / year", note: "Full personal insights" },
+  supporter: { price: "$32.99 / year", note: "Companion + Health Summary" }
+};
+
 function defaultState() {
   return {
     version: 1,
     createdAt: new Date().toISOString(),
     settings: {
-      plan: "supporter",
+      plan: "free",
       lockMinutes: 5
     },
     entries: {},
@@ -846,9 +854,27 @@ function showSettingsCategory(name) {
 
 function renderSettings() {
   if (!state) return;
+
+  const currentPlan = state.settings.plan || "free";
+  const currentDetails = planDetails[currentPlan] || planDetails.free;
+  const currentCard = $("currentPlanCard");
+
+  if (currentCard) {
+    currentCard.innerHTML =
+      '<div class="current-plan-main">' +
+        '<div><span class="current-plan-label">Your plan</span><strong>' + escapeHtml(planNames[currentPlan]) + '</strong><small>' + escapeHtml(currentDetails.note) + '</small></div>' +
+        '<div class="current-plan-price">' + escapeHtml(currentDetails.price) + '</div>' +
+      '</div>' +
+      '<span class="current-plan-status">Current</span>';
+  }
+
   document.querySelectorAll(".plan-card").forEach(function (button) {
-    button.classList.toggle("active", button.dataset.plan === state.settings.plan);
+    const isCurrent = button.dataset.plan === currentPlan;
+    button.hidden = isCurrent;
+    button.classList.remove("active");
+    button.setAttribute("aria-hidden", String(isCurrent));
   });
+
   $("lockMinutesSelect").value = String(state.settings.lockMinutes);
 
   const currentTab = document.querySelector("[data-settings-tab].active");
