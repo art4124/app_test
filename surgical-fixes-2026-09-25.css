@@ -270,3 +270,35 @@ textarea{
 body.theme-dark .garden-calendar-card{
   background:var(--vune-dark-surface)!important;
 }
+
+
+/* Large-screen layout repair after Garden retirement. */
+html,
+body{
+  width:100%;
+  max-width:100%;
+  overflow-x:clip;
+}
+.app-shell{
+  width:100%;
+  max-width:100%;
+  min-width:0;
+  overflow-x:clip;
+}
+.main-content{
+  width:100%;
+  min-width:0;
+  overflow-x:clip;
+}
+.view{
+  width:100%;
+  max-width:var(--max)!important;
+  margin-left:auto!important;
+  margin-right:auto!important;
+}
+.companion-widget{
+  max-width:calc(100vw - 44px);
+}
+.companion-panel{
+  max-width:100%;
+}
