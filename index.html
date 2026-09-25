@@ -415,14 +415,16 @@
 
             <section class="settings-panel" data-settings-panel="backup" hidden>
               <div class="settings-panel-heading">
-                <div><span class="eyebrow">Backup</span><h3>Keep an encrypted copy</h3></div>
+                <div><span class="eyebrow">Backup</span><h3>Recovery Key</h3></div>
               </div>
               <div class="settings-mini-card">
-                <p class="muted">Use the same passcode when restoring.</p>
+                <p class="muted">Your encrypted Recovery Key backup stays in this browser for this web test.</p>
                 <div class="button-row">
-                  <button id="exportBackupBtn" class="secondary-btn" type="button">Save backup</button>
-                  <label class="secondary-btn file-btn">Restore backup<input id="importBackupInput" type="file" accept="application/json,.json"></label>
+                  <button id="restoreBackupBtn" class="secondary-btn" type="button">Restore backup</button>
+                  <button id="showRecoveryKeyBtn" class="secondary-btn" type="button">Show current Recovery Key</button>
                 </div>
+                <p id="backupStatus" class="muted">Backup will be protected after your next save.</p>
+                <div id="recoveryKeyDisplay" class="recovery-key-box" hidden></div>
               </div>
             </section>
 
@@ -442,11 +444,16 @@
 
             <section class="settings-panel" data-settings-panel="data" hidden>
               <div class="settings-panel-heading">
-                <div><span class="eyebrow">Data</span><h3>Reset this browser copy</h3></div>
+                <div><span class="eyebrow">Data</span><h3>Local Vune data</h3></div>
+              </div>
+              <div class="settings-mini-card">
+                <p class="muted">Restore is handled with your encrypted Recovery Key backup.</p>
+                <div class="button-row"><button class="secondary-btn" type="button" data-settings-jump="backup">Recovery &amp; backup</button></div>
               </div>
               <div class="settings-mini-card danger-settings-card">
-                <p class="muted">This removes the encrypted Vune vault from this browser. An exported backup is the only way to restore it.</p>
-                <button id="deleteAllBtn" class="danger-btn" type="button">Delete this browser copy</button>
+                <p class="muted">Deleting this browser copy resets Vune but keeps the encrypted Recovery Key backup unless you permanently delete both.</p>
+                <button id="deleteAllBtn" class="danger-btn" type="button">Delete active browser copy</button>
+                <button id="deleteEverythingBtn" class="danger-btn" type="button">Permanently delete vault + recovery backup</button>
               </div>
             </section>
           </div>
