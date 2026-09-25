@@ -127,6 +127,14 @@
     renderAll();
     safe("checkinDate").value = date;
     loadCheckinForDate(date);
+
+    const saveStatus = safe("saveCheckinStatus");
+    if(saveStatus){
+      saveStatus.textContent = "✓ Check-in saved successfully";
+      saveStatus.classList.add("checkin-save-confirmation");
+      saveStatus.setAttribute("role","status");
+      saveStatus.setAttribute("aria-live","polite");
+    }
     showToast("Check-in saved. 💜");
   };
 
