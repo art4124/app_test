@@ -2,6 +2,8 @@
 
 const DATA_KEY = "vune_encrypted_state_v1";
 const SALT_KEY = "vune_salt_v1";
+const RECOVERY_BACKUP_KEY = "vune_recovery_backup_v1";
+const TERMS_VERSION = "1.0";
 const ITERATIONS = 250000;
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
@@ -13,1128 +15,155 @@ let toastTimer = null;
 let journalEditingId = null;
 let calendarCursor = new Date();
 calendarCursor.setDate(1);
+let recoveryResetRequired = false;
 
-const planNames = {
-  free: "Free",
-  essential: "Essential",
-  plus: "Plus",
-  complete: "Complete",
-  supporter: "Supporter"
-};
-
+const planNames = { free:"Free", essential:"Essential", plus:"Plus", complete:"Complete", supporter:"Supporter" };
+const planOrder = { free:0, essential:1, plus:2, complete:3, supporter:4 };
 const planDetails = {
-  free: { price: "$0", note: "Core tracking + Garden" },
-  essential: { price: "$4.99 / year", note: "Expanded daily tracking" },
-  plus: { price: "$12.99 / year", note: "Deeper cycle patterns" },
-  complete: { price: "$24.99 / year", note: "Full personal insights" },
-  supporter: { price: "$32.99 / year", note: "Companion + Health Summary" }
+  free:{price:"$0",note:"Cycle logging + basic Garden",unlock:"Track your cycle and grow your plant"},
+  essential:{price:"$4.99 / year",note:"Free + Analytics",unlock:"Unlocks analytics"},
+  plus:{price:"$12.99 / year",note:"Essential + Bloom Notes",unlock:"Adds the private journal"},
+  complete:{price:"$24.99 / year",note:"Plus + Pattern Garden",unlock:"Adds Pattern Garden"},
+  supporter:{price:"$32.99 / year",note:"Complete + Companion",unlock:"Adds the Vune Companion"}
 };
 
-function defaultState() {
-  return {
-    version: 1,
-    createdAt: new Date().toISOString(),
-    settings: {
-      plan: "free",
-      lockMinutes: 5
-    },
-    entries: {},
-    journals: [],
-    assistantMessages: [],
-    ui: {
-      pendingGardenGrowth: false
-    }
-  };
-}
+function $(id){ return document.getElementById(id); }
+function safe(id){ return $(id); }
+function esc(v){ return String(v==null?"":v).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/\"/g,"&quot;").replace(/'/g,"&#039;"); }
+function todayISO(){ const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+function parseISO(v){ const p=v.split("-").map(Number); return new Date(Date.UTC(p[0],p[1]-1,p[2])); }
+function isoUTC(d){ return d.getUTCFullYear()+"-"+String(d.getUTCMonth()+1).padStart(2,"0")+"-"+String(d.getUTCDate()).padStart(2,"0"); }
+function addDays(v,n){ const d=parseISO(v); d.setUTCDate(d.getUTCDate()+n); return isoUTC(d); }
+function diffDays(a,b){ return Math.round((parseISO(b)-parseISO(a))/86400000); }
+function prettyDate(v,opt){ if(!v)return"—"; return new Intl.DateTimeFormat(undefined,opt||{month:"short",day:"numeric",year:"numeric",timeZone:"UTC"}).format(parseISO(v)); }
+function toBase64(bytes){ let s=""; const a=bytes instanceof Uint8Array?bytes:new Uint8Array(bytes); for(let i=0;i<a.length;i++)s+=String.fromCharCode(a[i]); return btoa(s); }
+function fromBase64(v){ const s=atob(v); const a=new Uint8Array(s.length); for(let i=0;i<s.length;i++)a[i]=s.charCodeAt(i); return a; }
+function randomRecoveryKey(){ const b=crypto.getRandomValues(new Uint8Array(24)); return Array.from(b).map(x=>x.toString(16).padStart(2,"0")).join("").match(/.{1,8}/g).join("-").toUpperCase(); }
 
-function $(id) {
-  return document.getElementById(id);
+async function deriveKey(secret,salt){
+  const material=await crypto.subtle.importKey("raw",encoder.encode(secret),"PBKDF2",false,["deriveKey"]);
+  return crypto.subtle.deriveKey({name:"PBKDF2",salt,iterations:ITERATIONS,hash:"SHA-256"},material,{name:"AES-GCM",length:256},false,["encrypt","decrypt"]);
 }
+async function encryptJson(value,key){ const iv=crypto.getRandomValues(new Uint8Array(12)); const ct=await crypto.subtle.encrypt({name:"AES-GCM",iv},key,encoder.encode(JSON.stringify(value))); return JSON.stringify({v:1,iv:toBase64(iv),ciphertext:toBase64(new Uint8Array(ct))}); }
+async function decryptJson(payload,key){ const p=JSON.parse(payload); const plain=await crypto.subtle.decrypt({name:"AES-GCM",iv:fromBase64(p.iv)},key,fromBase64(p.ciphertext)); return JSON.parse(decoder.decode(plain)); }
 
-function toBase64(bytes) {
-  let binary = "";
-  const arr = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
-  for (let i = 0; i < arr.length; i += 1) binary += String.fromCharCode(arr[i]);
-  return btoa(binary);
-}
+function defaultState(){ return {version:2,createdAt:new Date().toISOString(),settings:{plan:"free",lockMinutes:5,appearance:"system",companionName:"Luma",recoveryKey:randomRecoveryKey(),termsAcceptedVersion:null,lastBackupAt:null},entries:{},journals:[],assistantMessages:[],ui:{pendingGardenGrowth:false}}; }
+function normalizeState(v){ const b=defaultState(); const n=Object.assign({},b,v||{}); n.settings=Object.assign({},b.settings,n.settings||{}); if(!n.settings.recoveryKey)n.settings.recoveryKey=randomRecoveryKey(); n.entries=n.entries||{}; n.journals=Array.isArray(n.journals)?n.journals:[]; n.assistantMessages=Array.isArray(n.assistantMessages)?n.assistantMessages:[]; n.ui=Object.assign({},b.ui,n.ui||{}); return n; }
+function hasVault(){ return Boolean(localStorage.getItem(DATA_KEY)&&localStorage.getItem(SALT_KEY)); }
 
-function fromBase64(value) {
-  const binary = atob(value);
-  const arr = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i += 1) arr[i] = binary.charCodeAt(i);
-  return arr;
-}
+async function persistState(){ if(!state||!currentKey)return; localStorage.setItem(DATA_KEY,await encryptJson(state,currentKey)); await persistRecoveryBackup(); }
+async function persistRecoveryBackup(){ if(!state||!state.settings.recoveryKey)return; const salt=crypto.getRandomValues(new Uint8Array(16)); const key=await deriveKey(state.settings.recoveryKey, salt); const copy=JSON.parse(JSON.stringify(state)); const payload=await encryptJson(copy,key); localStorage.setItem(RECOVERY_BACKUP_KEY,JSON.stringify({format:"vune-recovery-backup",version:1,salt:toBase64(salt),payload,updatedAt:new Date().toISOString()})); state.settings.lastBackupAt=new Date().toISOString(); }
+async function restoreWithRecoveryKey(recoveryKey){ const raw=localStorage.getItem(RECOVERY_BACKUP_KEY); if(!raw)throw new Error("No recovery backup"); const pack=JSON.parse(raw); const key=await deriveKey(recoveryKey,fromBase64(pack.salt)); return normalizeState(await decryptJson(pack.payload,key)); }
 
-async function deriveKey(passcode, salt) {
-  const material = await crypto.subtle.importKey(
-    "raw",
-    encoder.encode(passcode),
-    "PBKDF2",
-    false,
-    ["deriveKey"]
-  );
-  return crypto.subtle.deriveKey(
-    {
-      name: "PBKDF2",
-      salt: salt,
-      iterations: ITERATIONS,
-      hash: "SHA-256"
-    },
-    material,
-    { name: "AES-GCM", length: 256 },
-    false,
-    ["encrypt", "decrypt"]
-  );
-}
+function showToast(msg){ const t=safe("toast"); if(!t)return; t.textContent=msg; t.classList.add("show"); clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove("show"),2800); }
+function showSetup(){ safe("lockScreen").hidden=false; safe("appShell").hidden=true; safe("setupPanel").hidden=false; safe("unlockPanel").hidden=true; setTimeout(()=>safe("newPasscode")&&safe("newPasscode").focus(),50); }
+function showUnlock(){ safe("lockScreen").hidden=false; safe("appShell").hidden=true; safe("setupPanel").hidden=true; safe("unlockPanel").hidden=false; if(safe("unlockError"))safe("unlockError").textContent=""; if(safe("unlockPasscode"))safe("unlockPasscode").value=""; setTimeout(()=>safe("unlockPasscode")&&safe("unlockPasscode").focus(),50); }
+function showApp(){ safe("lockScreen").hidden=true; safe("appShell").hidden=false; if(safe("checkinDate"))safe("checkinDate").value=todayISO(); if(safe("journalDate"))safe("journalDate").value=todayISO(); applyAppearance(); renderAll(); scheduleAutoLock(); if(state.settings.termsAcceptedVersion!==TERMS_VERSION)showTermsGate(); }
+async function setupVault(passcode){ const salt=crypto.getRandomValues(new Uint8Array(16)); currentKey=await deriveKey(passcode,salt); state=defaultState(); localStorage.setItem(SALT_KEY,toBase64(salt)); await persistState(); showApp(); }
+async function unlockVault(passcode){ const salt=localStorage.getItem(SALT_KEY),payload=localStorage.getItem(DATA_KEY); if(!salt||!payload)throw new Error("No vault"); const key=await deriveKey(passcode,fromBase64(salt)); state=normalizeState(await decryptJson(payload,key)); currentKey=key; showApp(); }
+async function lockApp(){ if(state&&currentKey){try{await persistState();}catch(e){}} state=null; currentKey=null; clearTimeout(autoLockTimer); autoLockTimer=null; hasVault()?showUnlock():showSetup(); }
+function scheduleAutoLock(){ clearTimeout(autoLockTimer); if(!state)return; const m=Number(state.settings.lockMinutes); if(m>0)autoLockTimer=setTimeout(lockApp,m*60000); }
+function noteActivity(){ if(state)scheduleAutoLock(); }
 
-async function encryptState(value, key) {
-  const iv = crypto.getRandomValues(new Uint8Array(12));
-  const plaintext = encoder.encode(JSON.stringify(value));
-  const ciphertext = await crypto.subtle.encrypt({ name: "AES-GCM", iv: iv }, key, plaintext);
-  return JSON.stringify({
-    version: 1,
-    iv: toBase64(iv),
-    ciphertext: toBase64(new Uint8Array(ciphertext))
+function getEntryDates(){ return Object.keys(state.entries||{}).sort(); }
+function getPeriodStarts(){ const dates=getEntryDates().filter(d=>state.entries[d]&&state.entries[d].period); return dates.filter(d=>!state.entries[addDays(d,-1)]||!state.entries[addDays(d,-1)].period); }
+function getPeriodDayNumber(date){ if(!state.entries[date]||!state.entries[date].period)return null; let n=1,d=date; while(state.entries[addDays(d,-1)]&&state.entries[addDays(d,-1)].period){n++;d=addDays(d,-1);} return n; }
+function average(a){ return a.length?a.reduce((s,v)=>s+v,0)/a.length:null; }
+function getCycleLengths(){ const s=getPeriodStarts(),out=[]; for(let i=1;i<s.length;i++){const d=diffDays(s[i-1],s[i]); if(d>=15&&d<=60)out.push({start:s[i-1],next:s[i],days:d});} return out; }
+function getPrediction(){ const starts=getPeriodStarts(); if(!starts.length)return null; const cycles=getCycleLengths().slice(-6); const avg=cycles.length?Math.round(average(cycles.map(x=>x.days))):28; const last=starts[starts.length-1]; return {date:addDays(last,avg),average:avg,confidence:cycles.length>=5?"Higher":cycles.length>=2?"Building":"Early estimate"}; }
+function hasAnalytics(){ return planOrder[state.settings.plan]>=planOrder.essential; }
+function hasJournal(){ return planOrder[state.settings.plan]>=planOrder.plus; }
+function hasPatternGarden(){ return planOrder[state.settings.plan]>=planOrder.complete; }
+function hasCompanion(){ return state.settings.plan==="supporter"; }
+function getPredictedPeriodDates(){ if(!hasAnalytics())return[]; const p=getPrediction(); if(!p)return[]; return Array.from({length:5},(_,i)=>addDays(p.date,i)); }
+function getSymptomCounts(){ const c={}; getEntryDates().forEach(d=>(state.entries[d].symptoms||[]).forEach(s=>c[s]=(c[s]||0)+1)); return Object.keys(c).map(name=>({name,count:c[name]})).sort((a,b)=>b.count-a.count); }
+function getMoodCounts(){ const c={}; getEntryDates().forEach(d=>{const m=state.entries[d].mood;if(m)c[m]=(c[m]||0)+1;}); return Object.keys(c).map(name=>({name,count:c[name]})).sort((a,b)=>b.count-a.count); }
+function getGardenInfo(){ const w=getEntryDates().length, starts=getPeriodStarts().length, first=getEntryDates()[0]||null, age=first?Math.max(1,diffDays(first,todayISO())+1):0; let stage=0,name="Seed",next=1,msg="Your garden is ready for its first moment of care."; if(w>=1){stage=1;name="Sprout";next=3;msg="A small beginning is still a beginning. 🌱";} if(w>=3){stage=2;name="Growing";next=7;msg="Your check-ins are helping your garden take shape. 🌿";} if(w>=7){stage=3;name="Budding";next=14;msg="You’re building a clearer picture of your cycle. 💜";} if(w>=14){stage=4;name="Blooming";next=30;msg="Your care is turning into something beautiful and useful. 🌸";} if(w>=30){stage=5;name="Full Bloom";next=30;msg="Your garden reflects time and care — never perfection. ✨";} const prev=stage===0?0:stage===1?1:stage===2?3:stage===3?7:stage===4?14:30; const progress=stage===5?100:Math.max(0,Math.min(100,((w-prev)/(next-prev))*100)); const milestones=[{label:"First Sprout",detail:"First daily check-in",icon:"🌱",unlocked:w>=1},{label:"Week of Care",detail:"7 days logged",icon:"🌿",unlocked:w>=7},{label:"First Bloom",detail:"30 days logged",icon:"🌸",unlocked:w>=30},{label:"Cycle Keeper",detail:"3 period starts tracked",icon:"💜",unlocked:starts>=3},{label:"Season of Care",detail:"90 days logged",icon:"🪻",unlocked:w>=90}]; return {waterings:w,age,stage,stageName:name,next,message,progress,milestones,blooms:milestones.filter(x=>x.unlocked).length}; }
+
+function applyAppearance(){ if(!state)return; const pref=state.settings.appearance||"system"; const dark=pref==="dark"||(pref==="system"&&window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches); document.body.classList.toggle("theme-dark",dark); document.querySelectorAll("[data-appearance]").forEach(b=>b.classList.toggle("active",b.dataset.appearance===pref)); }
+function ensureEnhancementStyles(){ if(!document.querySelector('link[href="enhancements.css"]')){ const l=document.createElement("link"); l.rel="stylesheet"; l.href="enhancements.css"; document.head.appendChild(l); } }
+
+function gateView(name){ if(name==="journal"&&!hasJournal())return {title:"Bloom Notes unlocks with Plus",body:"Plus includes analytics and your private Bloom Notes journal."}; if(name==="insights"&&!hasAnalytics())return {title:"Analytics unlock with Essential",body:"Essential adds cycle analytics and pattern summaries."}; return null; }
+function showGate(name,gate){ const view=safe("view-"+name); if(!view)return; let box=view.querySelector(".feature-gate"); if(!box){ box=document.createElement("div"); box.className="feature-gate"; view.appendChild(box); } box.innerHTML='<span class="eyebrow">Plan feature</span><h3>'+esc(gate.title)+'</h3><p>'+esc(gate.body)+'</p><button class="primary-btn" type="button" data-go="settings">See plans</button>'; Array.from(view.children).forEach(ch=>{ if(ch!==box)ch.hidden=true; }); box.hidden=false; }
+function clearGate(name){ const view=safe("view-"+name); if(!view)return; const box=view.querySelector(".feature-gate"); if(box)box.hidden=true; Array.from(view.children).forEach(ch=>{ if(!ch.classList.contains("feature-gate"))ch.hidden=false; }); }
+function showView(name){ if(recoveryResetRequired&&name!=="settings"){showToast("Create a new vault passcode before continuing.");name="settings";} const gate=gateView(name); if(gate)showGate(name,gate); else clearGate(name); document.querySelectorAll(".view").forEach(v=>v.classList.toggle("active",v.id==="view-"+name)); document.querySelectorAll(".nav-btn[data-view]").forEach(b=>b.classList.toggle("active",b.dataset.view===name)); if(name==="calendar")renderCalendar(); if(name==="garden")renderGarden(); if(name==="journal"&&hasJournal())renderJournal(); if(name==="insights"&&hasAnalytics())renderInsights(); if(name==="settings")renderSettings(); window.scrollTo({top:0,behavior:"smooth"}); }
+
+function renderToday(){ const now=new Date(),hour=now.getHours(); if(safe("todayGreeting"))safe("todayGreeting").textContent=hour<12?"Good morning 💜":hour<18?"Good afternoon 🌿":"Good evening 🌙"; if(safe("todayDate"))safe("todayDate").textContent=now.toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric"}); const p=hasAnalytics()?getPrediction():null; if(safe("predictionDate")){ safe("predictionDate").textContent=hasAnalytics()?(p?prettyDate(p.date,{month:"long",day:"numeric",timeZone:"UTC"}):"Add your first period"):"Essential feature"; safe("predictionDetail").textContent=hasAnalytics()?(p?"About "+Math.max(0,diffDays(todayISO(),p.date))+" days away • "+p.average+"-day average":"Log a period start to begin."):"Upgrade to Essential for cycle analytics."; safe("predictionConfidence").textContent=hasAnalytics()?(p?p.confidence:"Still learning"):"Locked"; } const g=getGardenInfo(); if(safe("miniPlant"))safe("miniPlant").textContent=g.stage>=4?"🌸":g.stage>=2?"🌿":g.stage>=1?"🌱":"🫘"; if(safe("gardenMiniStatus"))safe("gardenMiniStatus").textContent=g.stageName; if(safe("gardenMiniDetail"))safe("gardenMiniDetail").textContent=g.waterings+" care day"+(g.waterings===1?"":"s"); if(safe("activePlanBadge"))safe("activePlanBadge").textContent=planNames[state.settings.plan]; }
+function loadCheckinForDate(date){ const e=state.entries[date]||{}; if(safe("flowSelect"))safe("flowSelect").value=e.flow||"none"; if(safe("moodSelect"))safe("moodSelect").value=e.mood||""; if(safe("periodToday"))safe("periodToday").checked=Boolean(e.period); if(safe("dailyReflection"))safe("dailyReflection").value=e.reflection||""; document.querySelectorAll("#symptomChips input[type=checkbox]").forEach(i=>i.checked=new Set(e.symptoms||[]).has(i.value)); if(safe("saveCheckinStatus"))safe("saveCheckinStatus").textContent=state.entries[date]?"Saved entry loaded.":""; }
+async function saveCheckin(ev){ ev.preventDefault(); const date=safe("checkinDate").value,period=safe("periodToday").checked,flow=safe("flowSelect").value,mood=safe("moodSelect").value,symptoms=Array.from(document.querySelectorAll("#symptomChips input:checked")).map(i=>i.value),reflection=safe("dailyReflection").value.trim(); if(!(period||flow!=="none"||mood||symptoms.length||reflection)){ if(safe("checkinRequirement"))safe("checkinRequirement").hidden=false; showToast("Add at least one feeling, symptom, cycle detail, or note before watering your plant. 🌱");return;} if(safe("checkinRequirement"))safe("checkinRequirement").hidden=true; state.entries[date]={date,period,flow,mood,symptoms,reflection,updatedAt:new Date().toISOString()}; state.ui.pendingGardenGrowth=true; await persistState(); renderAll(); safe("checkinDate").value=date; loadCheckinForDate(date); showToast("Saved — your plant is ready to grow. 🌱💧"); }
+
+function renderCalendar(){ if(!state)return; const y=calendarCursor.getFullYear(),m=calendarCursor.getMonth(); safe("calendarMonthLabel").textContent=calendarCursor.toLocaleDateString(undefined,{month:"long",year:"numeric"}); const first=new Date(y,m,1),start=new Date(y,m,1-first.getDay()),predicted=new Set(getPredictedPeriodDates()),html=[]; for(let i=0;i<42;i++){ const d=new Date(start); d.setDate(start.getDate()+i); const iso=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"),entry=state.entries[iso],journals=hasJournal()?state.journals.filter(j=>j.date===iso):[],tags=[]; if(entry&&entry.period)tags.push('<span class="calendar-tag period">Day '+getPeriodDayNumber(iso)+'</span>'); if(entry)tags.push('<span class="calendar-tag checkin">Check-in</span>'); journals.forEach(()=>tags.push('<span class="calendar-tag journal">Journal</span>')); if(predicted.has(iso)&&!(entry&&entry.period))tags.push('<span class="calendar-tag predicted">Next period</span>'); html.push('<button type="button" class="calendar-day garden-day has-detail'+(d.getMonth()!==m?' muted-day':'')+(iso===todayISO()?' today':'')+'" data-calendar-date="'+iso+'"><span class="day-number">'+d.getDate()+'</span><span class="calendar-event-list">'+tags.join("")+'</span></button>'); } safe("calendarGrid").innerHTML=html.join(""); }
+function ensureDayDetailSheet(){ if(safe("dayDetailSheet"))return; const wrap=document.createElement("div"); wrap.id="dayDetailSheet"; wrap.className="day-detail-sheet"; wrap.hidden=true; wrap.innerHTML='<section class="day-detail-card" role="dialog" aria-modal="true"><div class="day-detail-head"><div><span class="eyebrow">Day details</span><h3 id="dayDetailTitle"></h3></div><button id="closeDayDetail" class="icon-btn" type="button">×</button></div><div id="dayDetailItems" class="day-detail-items"></div></section>'; document.body.appendChild(wrap); safe("closeDayDetail").addEventListener("click",()=>wrap.hidden=true); wrap.addEventListener("click",e=>{if(e.target===wrap)wrap.hidden=true;}); }
+function openDayDetail(date){ ensureDayDetailSheet(); safe("dayDetailTitle").textContent=prettyDate(date,{weekday:"long",month:"long",day:"numeric",year:"numeric",timeZone:"UTC"}); const items=[]; const e=state.entries[date]; if(e&&e.period)items.push('<button class="day-detail-item period" data-open-checkin="'+date+'"><strong>Period — Day '+getPeriodDayNumber(date)+'</strong><small>Open this day’s cycle check-in</small></button>'); if(e)items.push('<button class="day-detail-item checkin" data-open-checkin="'+date+'"><strong>Cycle check-in</strong><small>Open the saved check-in for this date</small></button>'); if(hasJournal())state.journals.filter(j=>j.date===date).forEach(j=>items.push('<button class="day-detail-item journal" data-open-journal="'+esc(j.id)+'"><strong>'+esc(j.title||prettyDate(j.date))+'</strong><small>Bloom Notes • '+esc(prettyDate(j.date))+'</small></button>')); safe("dayDetailItems").innerHTML=items.length?items.join(""):'<p class="muted">Nothing has been saved for this day yet.</p>'; safe("dayDetailSheet").hidden=false; }
+
+function playGardenGrowth(){ const m=safe("growthMoment"),p=safe("plantArt"); if(!p)return; if(m)m.hidden=false; p.classList.remove("is-growing"); void p.offsetWidth; p.classList.add("is-growing"); if(m)m.classList.add("is-playing"); setTimeout(()=>{p.classList.remove("is-growing");if(m){m.classList.remove("is-playing");m.hidden=true;}},2500); }
+function renderGarden(){ if(!state)return; const g=getGardenInfo(); if(safe("plantArt"))safe("plantArt").className="plant-art stage-"+g.stage; if(safe("plantStageName"))safe("plantStageName").textContent=g.stageName; if(safe("plantStageMessage"))safe("plantStageMessage").textContent=g.message; if(safe("gardenProgressBar"))safe("gardenProgressBar").style.width=g.progress+"%"; if(safe("gardenProgressText"))safe("gardenProgressText").textContent=g.stage===5?"Your garden is in full bloom.":g.waterings+" of "+g.next+" care days toward the next stage"; if(safe("wateringsCount"))safe("wateringsCount").textContent=g.waterings; if(safe("bloomsCount"))safe("bloomsCount").textContent=hasPatternGarden()?g.blooms:"—"; if(safe("gardenAge"))safe("gardenAge").textContent=g.age; if(safe("memoryBlooms")){ safe("memoryBlooms").innerHTML=hasPatternGarden()?g.milestones.map(x=>'<div class="bloom-item'+(x.unlocked?'':' locked')+'"><span class="bloom-icon">'+x.icon+'</span><div><strong>'+esc(x.label)+'</strong><small>'+esc(x.unlocked?x.detail+" • unlocked":x.detail)+'</small></div></div>').join(""):'<div class="feature-gate"><h3>Pattern Garden unlocks with Complete</h3><p>Complete adds permanent pattern blooms and deeper garden milestones.</p><button class="primary-btn" type="button" data-go="settings">See Complete</button></div>'; } if(state.ui.pendingGardenGrowth&&safe("view-garden").classList.contains("active")){ state.ui.pendingGardenGrowth=false; persistState(); requestAnimationFrame(playGardenGrowth); } }
+
+async function saveJournal(ev){ ev.preventDefault(); if(!hasJournal())return; const date=safe("journalDate").value,title=safe("journalTitle").value.trim(),text=safe("journalText").value.trim(); if(!text)return; if(journalEditingId){const j=state.journals.find(x=>x.id===journalEditingId);if(j){j.date=date;j.title=title;j.text=text;j.updatedAt=new Date().toISOString();}journalEditingId=null;}else state.journals.push({id:crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random(),date,title,text,createdAt:new Date().toISOString()}); state.journals.sort((a,b)=>b.date.localeCompare(a.date)); await persistState(); safe("journalTitle").value="";safe("journalText").value="";safe("journalDate").value=todayISO();renderJournal();renderCalendar();showToast("Your private note is tucked safely away. 🔐💜"); }
+function renderJournal(){ if(!state||!hasJournal())return; const l=safe("journalList"); if(!l)return; if(!state.journals.length){l.innerHTML='<article class="card empty-state"><strong>No notes yet 💜</strong><br><span>This space is here whenever something feels worth remembering.</span></article>';return;} l.innerHTML=state.journals.map(j=>'<article class="journal-entry compact-entry"><div class="journal-entry-head"><div><span class="eyebrow">'+esc(prettyDate(j.date))+'</span><h3>'+esc(j.title||prettyDate(j.date,{month:"long",day:"numeric",year:"numeric",timeZone:"UTC"}))+'</h3></div><div class="journal-actions"><button class="text-btn" type="button" data-edit-journal="'+esc(j.id)+'">Open</button><button class="text-btn danger-text" type="button" data-delete-journal="'+esc(j.id)+'">Delete</button></div></div></article>').join(""); }
+function editJournal(id){ if(!hasJournal())return; const j=state.journals.find(x=>x.id===id); if(!j)return; journalEditingId=id; safe("journalDate").value=j.date;safe("journalTitle").value=j.title||"";safe("journalText").value=j.text;showView("journal");setTimeout(()=>safe("journalText").focus(),50); }
+async function deleteJournal(id){ const j=state.journals.find(x=>x.id===id); if(!j)return; if(!confirm("Delete this journal entry? This cannot be undone."))return; state.journals=state.journals.filter(x=>x.id!==id);await persistState();renderJournal();renderCalendar();showToast("Journal entry deleted."); }
+
+function renderBars(id,vals){ const t=safe(id); if(!t)return; if(!vals.length){t.className="bar-chart empty-state";t.textContent=id==="moodChart"?"Your mood patterns will appear here over time.":"Your symptom patterns will appear here over time.";return;} const max=Math.max(...vals.map(x=>x.count));t.className="bar-chart";t.innerHTML=vals.slice(0,6).map(x=>'<div class="bar-row"><span>'+esc(x.name)+'</span><div class="bar-track"><span style="width:'+Math.round(x.count/max*100)+'%"></span></div><strong>'+x.count+'</strong></div>').join(""); }
+function renderInsights(){ if(!hasAnalytics())return; const cycles=getCycleLengths(),vals=cycles.map(x=>x.days),avg=vals.length?Math.round(average(vals)):null; if(safe("avgCycleStat"))safe("avgCycleStat").textContent=avg==null?"—":avg;if(safe("cycleRangeStat"))safe("cycleRangeStat").textContent=vals.length?Math.min(...vals)+"–"+Math.max(...vals):"—";if(safe("trackedCyclesStat"))safe("trackedCyclesStat").textContent=getPeriodStarts().length;if(safe("checkinsStat"))safe("checkinsStat").textContent=getEntryDates().length;renderBars("symptomChart",getSymptomCounts());renderBars("moodChart",getMoodCounts());const t=safe("cycleHistory");if(t){if(!cycles.length){t.className="cycle-history empty-state";t.textContent="Once you’ve logged two period starts, Vune can begin showing your cycle rhythm here.";}else{const recent=cycles.slice(-8),max=Math.max(...recent.map(x=>x.days));t.className="cycle-history";t.innerHTML=recent.map(x=>'<div class="cycle-bar-wrap"><strong>'+x.days+'d</strong><div class="cycle-bar" style="height:'+Math.max(35,Math.round(x.days/max*130))+'px"></div><small>'+esc(prettyDate(x.start,{month:"short",day:"numeric",timeZone:"UTC"}))+'</small></div>').join("");}} }
+
+function setCompanionOpen(open){ const p=safe("companionPanel"),l=safe("companionLauncher");if(!p||!l)return;p.hidden=!open;l.setAttribute("aria-expanded",String(open));if(open)renderAssistant(); }
+function renderAssistant(){ if(!state)return; const name=state.settings.companionName||"Luma"; document.querySelectorAll(".companion-header strong").forEach(el=>el.textContent=name+" • Vune Companion"); const launcher=safe("companionLauncher");if(launcher){const s=launcher.querySelector("strong");if(s)s.textContent="Ask "+name;} const gate=safe("assistantGate"),exp=safe("assistantExperience");if(gate)gate.hidden=hasCompanion();if(exp)exp.hidden=!hasCompanion();if(!hasCompanion())return; const target=safe("assistantMessages");if(!target)return;target.innerHTML="";const msgs=state.assistantMessages.length?state.assistantMessages:[{role:"assistant",text:"Hi, I’m "+name+" ✦\n\nI can help you notice patterns, summarize what you’ve tracked, and prepare questions for appointments. I don’t diagnose."}];msgs.forEach(m=>{const d=document.createElement("div");d.className="assistant-message "+m.role;d.textContent=m.text;target.appendChild(d);});target.scrollTop=target.scrollHeight; }
+function assistantSummary(){ const cycles=getCycleLengths(),sym=getSymptomCounts(),p=getPrediction(),parts=[]; if(cycles.length){const vals=cycles.map(x=>x.days);parts.push("Your recorded cycles average about "+Math.round(average(vals))+" days, with a range of "+Math.min(...vals)+"–"+Math.max(...vals)+" days.");}else parts.push("I’m still learning your rhythm. Log at least two period starts for a cycle summary."); if(sym.length)parts.push("Most logged symptoms: "+sym.slice(0,3).map(x=>x.name+" ("+x.count+")").join(", ")+"."); if(p)parts.push("Current estimate for the next period start: "+prettyDate(p.date)+"."); parts.push("This reflects your own records and is not a diagnosis."); return parts.join("\n\n"); }
+function answerAssistant(prompt){ const lower=prompt.toLowerCase(),name=state.settings.companionName||"Luma"; if(/diagnos|do i have|pcos|endometri|pregnant/.test(lower))return "I can organize what you’ve tracked, but I can’t diagnose a condition or confirm pregnancy. A clinician can help with medical questions."; if(/summary|pattern|overview/.test(lower))return assistantSummary(); if(/next period|prediction/.test(lower)){const p=getPrediction();return p?"Based on your records, the current estimate is "+prettyDate(p.date)+". This can shift as your cycle changes.":"I need at least one recorded period start before I can estimate the next one.";} if(/journal|note/.test(lower))return "You have "+state.journals.length+" Bloom Notes entr"+(state.journals.length===1?"y":"ies")+" saved in your encrypted vault."; return name+" can help summarize cycle patterns, symptoms, moods, period estimates, and appointment prep."; }
+async function sendAssistant(ev){ev.preventDefault();if(!hasCompanion())return;const p=safe("assistantPrompt").value.trim();if(!p)return;state.assistantMessages.push({role:"user",text:p,at:new Date().toISOString()},{role:"assistant",text:answerAssistant(p),at:new Date().toISOString()});safe("assistantPrompt").value="";await persistState();renderAssistant();}
+
+function injectSettingsAdditions(){ const menu=document.querySelector(".settings-menu"); if(!menu)return; if(!document.querySelector('[data-settings-tab="appearance"]')){const b=document.createElement("button");b.className="settings-tab";b.type="button";b.dataset.settingsTab="appearance";b.innerHTML='<span>◐</span><span><strong>Appearance</strong><small>Light & dark</small></span>';menu.insertBefore(b,menu.querySelector('.danger-settings-tab'));} if(!document.querySelector('[data-settings-tab="companion"]')){const b=document.createElement("button");b.className="settings-tab";b.type="button";b.dataset.settingsTab="companion";b.innerHTML='<span>✦</span><span><strong>Companion</strong><small>Name your guide</small></span>';menu.insertBefore(b,menu.querySelector('.danger-settings-tab'));} const panels=document.querySelector(".settings-panels"); if(panels&&!document.querySelector('[data-settings-panel="appearance"]')){const s=document.createElement("section");s.className="settings-panel";s.dataset.settingsPanel="appearance";s.hidden=true;s.innerHTML='<div class="settings-panel-heading"><div><span class="eyebrow">Appearance</span><h3>Choose your lighting</h3></div></div><div class="settings-mini-card"><div class="appearance-options"><button class="appearance-option" type="button" data-appearance="light">☀️<br><strong>Light</strong></button><button class="appearance-option" type="button" data-appearance="dark">🌙<br><strong>Dark</strong></button><button class="appearance-option" type="button" data-appearance="system">◐<br><strong>System</strong></button></div></div>';panels.appendChild(s);} if(panels&&!document.querySelector('[data-settings-panel="companion"]')){const s=document.createElement("section");s.className="settings-panel";s.dataset.settingsPanel="companion";s.hidden=true;s.innerHTML='<div class="settings-panel-heading"><div><span class="eyebrow">Companion</span><h3>Your Vune Companion</h3></div></div><div class="settings-mini-card"><label>Companion name<input id="companionNameInput" maxlength="30" placeholder="Luma"></label><button id="saveCompanionNameBtn" class="secondary-btn" type="button">Save name</button><button id="resetCompanionNameBtn" class="text-btn" type="button">Reset to Luma</button></div>';panels.appendChild(s);} }
+function showSettingsCategory(name){ document.querySelectorAll("[data-settings-tab]").forEach(t=>{const a=t.dataset.settingsTab===name;t.classList.toggle("active",a);t.setAttribute("aria-selected",String(a));}); document.querySelectorAll("[data-settings-panel]").forEach(p=>{const a=p.dataset.settingsPanel===name;p.classList.toggle("active",a);p.hidden=!a;}); }
+function renderSettings(){ if(!state)return; injectSettingsAdditions(); const cur=state.settings.plan||"free",det=planDetails[cur]; if(safe("currentPlanCard"))safe("currentPlanCard").innerHTML='<div class="current-plan-main"><div><span class="current-plan-label">Your plan</span><strong>'+esc(planNames[cur])+'</strong><small>'+esc(det.note)+'</small></div><div class="current-plan-price">'+esc(det.price)+'</div></div><span class="current-plan-status">Current</span>'; document.querySelectorAll(".plan-card").forEach(b=>{const isCur=b.dataset.plan===cur;b.hidden=isCur;let unlock=b.querySelector(".new-unlock");if(!unlock){unlock=document.createElement("span");unlock.className="new-unlock";b.appendChild(unlock);} }); if(safe("lockMinutesSelect"))safe("lockMinutesSelect").value=String(state.settings.lockMinutes); if(safe("companionNameInput"))safe("companionNameInput").value=state.settings.companionName||"Luma"; applyAppearance(); rewriteSettingsCopy(); if(recoveryResetRequired){showSettingsCategory("security");document.querySelectorAll(".side-nav,.mobile-nav,.settings-menu").forEach(el=>el.classList.add("locked-navigation"));}else document.querySelectorAll(".side-nav,.mobile-nav,.settings-menu").forEach(el=>el.classList.remove("locked-navigation")); }
+function rewriteSettingsCopy(){ const backup=document.querySelector('[data-settings-panel="backup"]'); if(backup){backup.innerHTML='<div class="settings-panel-heading"><div><span class="eyebrow">Backup</span><h3>Recovery Key</h3></div></div><div class="settings-mini-card"><p class="muted">Your web-test backup stays encrypted in this browser. Your Recovery Key is what can unlock it if you forget your vault passcode.</p><div class="button-row"><button id="restoreBackupBtn" class="secondary-btn" type="button">Restore backup</button><button id="showRecoveryKeyBtn" class="secondary-btn" type="button">Show current Recovery Key</button></div><p id="backupStatus" class="muted">'+(state.settings.lastBackupAt?'Last protected: '+esc(new Date(state.settings.lastBackupAt).toLocaleString()):'Backup will be protected after your next save.')+'</p><div id="recoveryKeyDisplay" class="recovery-key-box" hidden></div></div>'; } const privacy=document.querySelector('[data-settings-panel="privacy"]'); if(privacy){privacy.innerHTML='<div class="settings-panel-heading"><div><span class="eyebrow">Privacy</span><h3>Your data belongs to you</h3></div></div><div class="privacy-promise"><div><strong>Stored locally</strong><span>Your personal health information stays encrypted in this browser for this web prototype.</span></div><div><strong>Not sold</strong><span>Vune does not sell your personal health data.</span></div><div><strong>No Vune health-data server</strong><span>This prototype does not back up your health entries to a Vune server.</span></div><div><strong>Encrypted</strong><span>Your vault and local recovery copy are encrypted.</span></div></div><div class="legal-link-row"><a class="text-link" href="privacy.html">Privacy notes →</a><a class="text-link" href="terms.html">Terms & Conditions →</a></div>'; } const data=document.querySelector('[data-settings-panel="data"]'); if(data){data.innerHTML='<div class="settings-panel-heading"><div><span class="eyebrow">Data</span><h3>Local Vune data</h3></div></div><div class="settings-mini-card"><p class="muted">Vune no longer uses downloadable backup files in this test. Restore is handled with your Recovery Key.</p><div class="button-row"><button class="secondary-btn" type="button" data-settings-jump="backup">Recovery & backup</button></div></div><div class="settings-mini-card danger-settings-card"><p class="muted">Deleting this browser copy removes the encrypted vault and its local recovery backup. This cannot be recovered afterward.</p><button id="deleteAllBtn" class="danger-btn" type="button">Delete this browser copy</button></div>'; } const sec=document.querySelector('[data-settings-panel="security"]'); if(sec&&!sec.querySelector(".recovery-warning")){const w=document.createElement("p");w.className="recovery-warning";w.textContent="Important: if you lose your vault passcode and Recovery Key and cannot use a supported device recovery method, Vune cannot recover your encrypted data. There is no master key or backdoor.";sec.appendChild(w);} }
+async function selectPlan(plan){ if(!planNames[plan])return;state.settings.plan=plan;await persistState();renderAll();showToast(planNames[plan]+" is ready to explore ✨ No payment was collected."); }
+async function changePasscode(force=false){ const first=prompt(force?"Create a new vault passcode to finish recovery (at least 6 characters).":"Create a new Vune passcode (at least 6 characters)."); if(first==null){if(force){showToast("A new passcode is required before using Vune.");}return false;} if(first.length<6){showToast("Passcode must be at least 6 characters.");return false;} const second=prompt("Confirm the new passcode.");if(second!==first){showToast("Passcodes did not match.");return false;} const salt=crypto.getRandomValues(new Uint8Array(16));currentKey=await deriveKey(first,salt);localStorage.setItem(SALT_KEY,toBase64(salt));await persistState();recoveryResetRequired=false;renderSettings();showToast("Your vault passcode has been updated. Vune access is restored.");return true; }
+function deleteAllData(){ if(!confirm("Delete all Vune data stored in this browser?"))return;if(!confirm("Final confirmation: permanently delete this browser copy and its recovery backup?"))return;localStorage.removeItem(DATA_KEY);localStorage.removeItem(SALT_KEY);localStorage.removeItem(RECOVERY_BACKUP_KEY);location.reload(); }
+
+function ensureRecoveryModal(){ if(safe("recoveryModal"))return; const m=document.createElement("div");m.id="recoveryModal";m.className="recovery-modal";m.hidden=true;m.innerHTML='<section class="recovery-card" role="dialog" aria-modal="true"><span class="eyebrow">Vault recovery</span><h3>Use your Recovery Key</h3><p class="muted">Enter the Recovery Key you saved when your vault was accessible.</p><label>Recovery Key<input id="recoveryInput" autocomplete="off" placeholder="XXXX-XXXX-..."></label><div class="button-row"><button id="confirmRecoveryBtn" class="primary-btn" type="button">Restore vault</button><button id="cancelRecoveryBtn" class="secondary-btn" type="button">Cancel</button></div><p class="recovery-warning">Web test note: Face ID, device passcode, and Apple identity confirmation require native platform APIs and are not simulated as passwords inside Vune.</p></section>';document.body.appendChild(m);safe("cancelRecoveryBtn").onclick=()=>m.hidden=true;safe("confirmRecoveryBtn").onclick=async()=>{try{const restored=await restoreWithRecoveryKey(safe("recoveryInput").value.trim());state=restored;currentKey=null;recoveryResetRequired=true;m.hidden=true;safe("lockScreen").hidden=true;safe("appShell").hidden=false;renderAll();showView("settings");showSettingsCategory("security");showToast("Recovery succeeded. Create a new vault passcode to continue.");setTimeout(()=>changePasscode(true),150);}catch(e){showToast("That Recovery Key could not unlock the backup.");}}; }
+async function showCurrentRecoveryKey(){ const pass=prompt("Enter your current Vune vault password to reveal the Recovery Key.");if(!pass)return;try{const salt=localStorage.getItem(SALT_KEY),payload=localStorage.getItem(DATA_KEY),key=await deriveKey(pass,fromBase64(salt));await decryptJson(payload,key);const box=safe("recoveryKeyDisplay");box.textContent=state.settings.recoveryKey;box.hidden=false;showToast("Recovery Key revealed. Keep it somewhere private.");}catch(e){showToast("That vault password could not be verified.");}}
+
+function ensureTermsLinks(){ const f=document.querySelector(".sidebar-footer");if(f&&!f.querySelector('a[href="terms.html"]')){const a=document.createElement("a");a.href="terms.html";a.className="text-link";a.textContent="Terms & Conditions";f.appendChild(a);} }
+function ensureTermsGate(){ if(safe("termsGate"))return; const g=document.createElement("div");g.id="termsGate";g.className="terms-gate";g.hidden=true;g.innerHTML='<section class="terms-card"><span class="eyebrow">Before you continue</span><h2>Vune Terms & Conditions</h2><p>Vune is for cycle tracking and personal wellness organization. It is not medical advice, diagnosis, treatment, contraception, fertility care, or emergency care.</p><p>Your encrypted vault has no Vune master key. If you lose your passcode, Recovery Key, and supported recovery methods, your data may be unrecoverable.</p><p>The web prototype stores encrypted health entries and its encrypted recovery copy locally in this browser. It does not collect payment.</p><p><a class="text-link" href="terms.html" target="_blank" rel="noopener">Read the full Terms & Conditions →</a></p><label class="terms-check"><input id="termsAgreeCheck" type="checkbox"><span>I have read and agree to the Vune Terms & Conditions.</span></label><div class="terms-actions"><button id="acceptTermsBtn" class="primary-btn" type="button" disabled>Agree & continue</button></div></section>';document.body.appendChild(g);safe("termsAgreeCheck").onchange=e=>safe("acceptTermsBtn").disabled=!e.target.checked;safe("acceptTermsBtn").onclick=async()=>{state.settings.termsAcceptedVersion=TERMS_VERSION;await persistState();g.hidden=true;showToast("Terms accepted.");}; }
+function showTermsGate(){ensureTermsGate();safe("termsGate").hidden=false;}
+
+function renderAll(){ renderToday();renderCalendar();renderGarden();if(hasJournal())renderJournal();if(hasAnalytics())renderInsights();renderAssistant();renderSettings(); }
+
+function bindEvents(){
+  safe("setupForm").addEventListener("submit",async e=>{e.preventDefault();const a=safe("newPasscode").value,b=safe("confirmPasscode").value;if(a.length<6)return showToast("Use at least 6 characters.");if(a!==b)return showToast("Passcodes do not match.");try{await setupVault(a);safe("newPasscode").value="";safe("confirmPasscode").value="";showToast("Encrypted Vune vault created.");}catch(err){showToast("Could not create the encrypted vault in this browser.");}});
+  safe("unlockForm").addEventListener("submit",async e=>{e.preventDefault();try{await unlockVault(safe("unlockPasscode").value);}catch(err){safe("unlockError").textContent="That passcode could not unlock this vault.";}});
+  if(safe("resetFromLock")){safe("resetFromLock").textContent="Forgot passcode?";safe("resetFromLock").onclick=()=>{ensureRecoveryModal();safe("recoveryModal").hidden=false;};}
+  document.addEventListener("click",e=>{
+    const nav=e.target.closest(".nav-btn[data-view]");if(nav){showView(nav.dataset.view);return;}
+    const go=e.target.closest("[data-go]");if(go){showView(go.dataset.go);setCompanionOpen(false);return;}
+    const day=e.target.closest("[data-calendar-date]");if(day&&state){openDayDetail(day.dataset.calendarDate);return;}
+    const oc=e.target.closest("[data-open-checkin]");if(oc){safe("dayDetailSheet").hidden=true;safe("checkinDate").value=oc.dataset.openCheckin;loadCheckinForDate(oc.dataset.openCheckin);showView("today");return;}
+    const oj=e.target.closest("[data-open-journal]");if(oj){safe("dayDetailSheet").hidden=true;editJournal(oj.dataset.openJournal);return;}
+    const ej=e.target.closest("[data-edit-journal]");if(ej){editJournal(ej.dataset.editJournal);return;}
+    const dj=e.target.closest("[data-delete-journal]");if(dj){deleteJournal(dj.dataset.deleteJournal);return;}
+    const plan=e.target.closest("[data-plan]");if(plan&&state){selectPlan(plan.dataset.plan);return;}
+    const tab=e.target.closest("[data-settings-tab]");if(tab){showSettingsCategory(tab.dataset.settingsTab);return;}
+    const jump=e.target.closest("[data-settings-jump]");if(jump){showSettingsCategory(jump.dataset.settingsJump);return;}
+    const ap=e.target.closest("[data-appearance]");if(ap&&state){state.settings.appearance=ap.dataset.appearance;persistState();applyAppearance();return;}
+    const jp=e.target.closest("[data-journal-prompt]");if(jp&&state&&hasJournal()){const f=safe("journalText"),txt=jp.dataset.journalPrompt||"";f.value=f.value.trim()?f.value+"\n\n"+txt:txt;f.focus();return;}
+    if(e.target.id==="restoreBackupBtn"){ensureRecoveryModal();safe("recoveryModal").hidden=false;return;}
+    if(e.target.id==="showRecoveryKeyBtn"){showCurrentRecoveryKey();return;}
+    if(e.target.id==="deleteAllBtn"){deleteAllData();return;}
+    if(e.target.id==="saveCompanionNameBtn"){const v=safe("companionNameInput").value.trim();state.settings.companionName=v||"Luma";persistState();renderAssistant();showToast("Companion name saved.");return;}
+    if(e.target.id==="resetCompanionNameBtn"){state.settings.companionName="Luma";persistState();renderSettings();renderAssistant();showToast("Companion name reset to Luma.");return;}
   });
+  safe("checkinForm").addEventListener("submit",saveCheckin);safe("checkinDate").addEventListener("change",()=>loadCheckinForDate(safe("checkinDate").value));safe("journalForm").addEventListener("submit",saveJournal);safe("assistantForm").addEventListener("submit",sendAssistant);
+  safe("companionLauncher").addEventListener("click",()=>setCompanionOpen(safe("companionPanel").hidden));safe("closeCompanionBtn").addEventListener("click",()=>setCompanionOpen(false));
+  safe("prevMonth").addEventListener("click",()=>{calendarCursor.setMonth(calendarCursor.getMonth()-1);renderCalendar();});safe("nextMonth").addEventListener("click",()=>{calendarCursor.setMonth(calendarCursor.getMonth()+1);renderCalendar();});
+  const toolbar=safe("prevMonth")&&safe("prevMonth").parentElement;if(toolbar&&!safe("todayCalendarBtn")){const b=document.createElement("button");b.id="todayCalendarBtn";b.className="secondary-btn compact";b.type="button";b.textContent="Today";b.onclick=()=>{calendarCursor=new Date();calendarCursor.setDate(1);renderCalendar();};toolbar.insertBefore(b,safe("nextMonth"));}
+  safe("lockNowBtn").addEventListener("click",lockApp);safe("mobileLockBtn").addEventListener("click",lockApp);
+  if(safe("lockMinutesSelect"))safe("lockMinutesSelect").addEventListener("change",async()=>{state.settings.lockMinutes=Number(safe("lockMinutesSelect").value);await persistState();scheduleAutoLock();showToast("Privacy preference saved. 🔐");});
+  if(safe("changePasscodeBtn"))safe("changePasscodeBtn").addEventListener("click",()=>changePasscode(false));
+  ["pointerdown","keydown","touchstart"].forEach(n=>document.addEventListener(n,noteActivity,{passive:true}));
+  document.addEventListener("keydown",e=>{if(e.key==="Escape"){if(safe("dayDetailSheet"))safe("dayDetailSheet").hidden=true;if(safe("companionPanel"))setCompanionOpen(false);}});
 }
 
-async function decryptState(payload, key) {
-  const parsed = JSON.parse(payload);
-  const plaintext = await crypto.subtle.decrypt(
-    { name: "AES-GCM", iv: fromBase64(parsed.iv) },
-    key,
-    fromBase64(parsed.ciphertext)
-  );
-  return JSON.parse(decoder.decode(plaintext));
-}
+async function init(){ if(!window.crypto||!window.crypto.subtle){document.body.innerHTML='<main style="max-width:680px;margin:60px auto;padding:24px;font-family:system-ui"><h1>Vune needs a secure browser context</h1><p>Open it over HTTPS or localhost in a modern browser.</p></main>';return;} ensureEnhancementStyles();ensureTermsLinks();ensureDayDetailSheet();ensureRecoveryModal();ensureTermsGate();injectSettingsAdditions();bindEvents();if(hasVault())showUnlock();else showSetup();if(window.matchMedia)window.matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change",()=>{if(state&&state.settings.appearance==="system")applyAppearance();});if("serviceWorker"in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("./service-worker.js").catch(()=>{})); }
 
-async function persistState() {
-  if (!state || !currentKey) return;
-  localStorage.setItem(DATA_KEY, await encryptState(state, currentKey));
-}
-
-function hasVault() {
-  return Boolean(localStorage.getItem(DATA_KEY) && localStorage.getItem(SALT_KEY));
-}
-
-function showSetup() {
-  $("lockScreen").hidden = false;
-  $("appShell").hidden = true;
-  $("setupPanel").hidden = false;
-  $("unlockPanel").hidden = true;
-  setTimeout(function () { $("newPasscode").focus(); }, 50);
-}
-
-function showUnlock() {
-  $("lockScreen").hidden = false;
-  $("appShell").hidden = true;
-  $("setupPanel").hidden = true;
-  $("unlockPanel").hidden = false;
-  $("unlockError").textContent = "";
-  $("unlockPasscode").value = "";
-  setTimeout(function () { $("unlockPasscode").focus(); }, 50);
-}
-
-function showApp() {
-  $("lockScreen").hidden = true;
-  $("appShell").hidden = false;
-  $("checkinDate").value = todayISO();
-  $("journalDate").value = todayISO();
-  renderAll();
-  scheduleAutoLock();
-}
-
-async function setupVault(passcode) {
-  const salt = crypto.getRandomValues(new Uint8Array(16));
-  const key = await deriveKey(passcode, salt);
-  currentKey = key;
-  state = defaultState();
-  localStorage.setItem(SALT_KEY, toBase64(salt));
-  await persistState();
-  showApp();
-}
-
-async function unlockVault(passcode) {
-  const saltValue = localStorage.getItem(SALT_KEY);
-  const payload = localStorage.getItem(DATA_KEY);
-  if (!saltValue || !payload) throw new Error("No vault");
-  const key = await deriveKey(passcode, fromBase64(saltValue));
-  const decrypted = await decryptState(payload, key);
-  currentKey = key;
-  state = normalizeState(decrypted);
-  showApp();
-}
-
-function normalizeState(value) {
-  const base = defaultState();
-  const normalized = Object.assign({}, base, value || {});
-  normalized.settings = Object.assign({}, base.settings, normalized.settings || {});
-  normalized.entries = normalized.entries || {};
-  normalized.journals = Array.isArray(normalized.journals) ? normalized.journals : [];
-  normalized.assistantMessages = Array.isArray(normalized.assistantMessages) ? normalized.assistantMessages : [];
-  normalized.ui = Object.assign({}, base.ui, normalized.ui || {});
-  return normalized;
-}
-
-async function lockApp() {
-  if (state && currentKey) {
-    try { await persistState(); } catch (error) { /* fail closed */ }
-  }
-  state = null;
-  currentKey = null;
-  if (autoLockTimer) clearTimeout(autoLockTimer);
-  autoLockTimer = null;
-  if (hasVault()) showUnlock();
-  else showSetup();
-}
-
-function scheduleAutoLock() {
-  if (autoLockTimer) clearTimeout(autoLockTimer);
-  if (!state) return;
-  const minutes = Number(state.settings.lockMinutes);
-  if (minutes <= 0) return;
-  autoLockTimer = setTimeout(function () {
-    lockApp();
-  }, minutes * 60 * 1000);
-}
-
-function noteActivity() {
-  if (state) scheduleAutoLock();
-}
-
-function todayISO() {
-  const d = new Date();
-  return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
-}
-
-function parseISO(value) {
-  const parts = value.split("-").map(Number);
-  return new Date(Date.UTC(parts[0], parts[1] - 1, parts[2]));
-}
-
-function isoFromDateUTC(date) {
-  return date.getUTCFullYear() + "-" + String(date.getUTCMonth() + 1).padStart(2, "0") + "-" + String(date.getUTCDate()).padStart(2, "0");
-}
-
-function addDays(value, days) {
-  const date = parseISO(value);
-  date.setUTCDate(date.getUTCDate() + days);
-  return isoFromDateUTC(date);
-}
-
-function diffDays(fromValue, toValue) {
-  return Math.round((parseISO(toValue) - parseISO(fromValue)) / 86400000);
-}
-
-function prettyDate(value, options) {
-  if (!value) return "—";
-  const date = parseISO(value);
-  return new Intl.DateTimeFormat(undefined, options || { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" }).format(date);
-}
-
-function escapeHtml(value) {
-  return String(value == null ? "" : value)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-}
-
-function getEntryDates() {
-  return Object.keys(state.entries || {}).sort();
-}
-
-function getPeriodStarts() {
-  const dates = getEntryDates().filter(function (date) {
-    return Boolean(state.entries[date] && state.entries[date].period);
-  });
-  return dates.filter(function (date) {
-    const prev = addDays(date, -1);
-    return !state.entries[prev] || !state.entries[prev].period;
-  });
-}
-
-function getCycleLengths() {
-  const starts = getPeriodStarts();
-  const values = [];
-  for (let i = 1; i < starts.length; i += 1) {
-    const days = diffDays(starts[i - 1], starts[i]);
-    if (days >= 15 && days <= 60) values.push({ start: starts[i - 1], next: starts[i], days: days });
-  }
-  return values;
-}
-
-function average(values) {
-  if (!values.length) return null;
-  return values.reduce(function (sum, value) { return sum + value; }, 0) / values.length;
-}
-
-function getPrediction() {
-  const starts = getPeriodStarts();
-  if (!starts.length) return null;
-  const cycles = getCycleLengths().slice(-6);
-  let avg = cycles.length ? Math.round(average(cycles.map(function (item) { return item.days; }))) : 28;
-  const last = starts[starts.length - 1];
-  let predicted = addDays(last, avg);
-  while (diffDays(predicted, todayISO()) > avg + 5) predicted = addDays(predicted, avg);
-  const confidence = cycles.length >= 5 ? "Higher" : cycles.length >= 2 ? "Building" : "Early estimate";
-  return { date: predicted, average: avg, confidence: confidence, cycles: cycles.length };
-}
-
-function getPredictedPeriodDates() {
-  const prediction = getPrediction();
-  if (!prediction) return [];
-  const list = [];
-  for (let i = 0; i < 5; i += 1) list.push(addDays(prediction.date, i));
-  return list;
-}
-
-function getSymptomCounts() {
-  const counts = {};
-  getEntryDates().forEach(function (date) {
-    const symptoms = state.entries[date].symptoms || [];
-    symptoms.forEach(function (symptom) {
-      counts[symptom] = (counts[symptom] || 0) + 1;
-    });
-  });
-  return Object.keys(counts).map(function (name) {
-    return { name: name, count: counts[name] };
-  }).sort(function (a, b) { return b.count - a.count; });
-}
-
-function getMoodCounts() {
-  const counts = {};
-  getEntryDates().forEach(function (date) {
-    const mood = state.entries[date].mood;
-    if (mood) counts[mood] = (counts[mood] || 0) + 1;
-  });
-  return Object.keys(counts).map(function (name) {
-    return { name: name, count: counts[name] };
-  }).sort(function (a, b) { return b.count - a.count; });
-}
-
-function getLastEntryDate() {
-  const dates = getEntryDates();
-  return dates.length ? dates[dates.length - 1] : null;
-}
-
-function getGardenInfo() {
-  const dates = getEntryDates();
-  const waterings = dates.length;
-  const first = dates.length ? dates[0] : null;
-  const age = first ? Math.max(1, diffDays(first, todayISO()) + 1) : 0;
-  const starts = getPeriodStarts().length;
-  const milestones = [
-    { id: "first", label: "First Sprout", detail: "First daily check-in", icon: "🌱", unlocked: waterings >= 1 },
-    { id: "week", label: "Week of Care", detail: "7 days logged", icon: "🌿", unlocked: waterings >= 7 },
-    { id: "month", label: "First Bloom", detail: "30 days logged", icon: "🌸", unlocked: waterings >= 30 },
-    { id: "cycles", label: "Cycle Keeper", detail: "3 period starts tracked", icon: "💜", unlocked: starts >= 3 },
-    { id: "season", label: "Season of Care", detail: "90 days logged", icon: "🪻", unlocked: waterings >= 90 }
-  ];
-  let stage = 0;
-  let stageName = "Seed";
-  let next = 1;
-  let message = "Your garden is ready for its first moment of care.";
-  if (waterings >= 1) { stage = 1; stageName = "Sprout"; next = 3; message = "A small beginning is still a beginning. 🌱"; }
-  if (waterings >= 3) { stage = 2; stageName = "Growing"; next = 7; message = "Your check-ins are helping your garden take shape. 🌿"; }
-  if (waterings >= 7) { stage = 3; stageName = "Budding"; next = 14; message = "You’re building a clearer picture of your cycle. 💜"; }
-  if (waterings >= 14) { stage = 4; stageName = "Blooming"; next = 30; message = "Your care is turning into something beautiful and useful. 🌸"; }
-  if (waterings >= 30) { stage = 5; stageName = "Full Bloom"; next = 30; message = "Your garden reflects time, care, and consistency — never perfection. ✨"; }
-  const previousThreshold = stage === 0 ? 0 : stage === 1 ? 1 : stage === 2 ? 3 : stage === 3 ? 7 : stage === 4 ? 14 : 30;
-  const progress = stage === 5 ? 100 : Math.max(0, Math.min(100, ((waterings - previousThreshold) / (next - previousThreshold)) * 100));
-  return {
-    waterings: waterings,
-    age: age,
-    periodStarts: starts,
-    milestones: milestones,
-    blooms: milestones.filter(function (item) { return item.unlocked; }).length,
-    stage: stage,
-    stageName: stageName,
-    message: message,
-    next: next,
-    progress: progress
-  };
-}
-
-function showToast(message) {
-  const toast = $("toast");
-  toast.textContent = message;
-  toast.classList.add("show");
-  if (toastTimer) clearTimeout(toastTimer);
-  toastTimer = setTimeout(function () { toast.classList.remove("show"); }, 2600);
-}
-
-function showView(name) {
-  document.querySelectorAll(".view").forEach(function (view) {
-    view.classList.toggle("active", view.id === "view-" + name);
-  });
-  document.querySelectorAll(".nav-btn[data-view]").forEach(function (button) {
-    button.classList.toggle("active", button.dataset.view === name);
-  });
-  if (name === "calendar") renderCalendar();
-  if (name === "garden") renderGarden();
-  if (name === "journal") renderJournal();
-  if (name === "insights") renderInsights();
-  if (name === "assistant") renderAssistant();
-  if (name === "settings") renderSettings();
-  window.scrollTo({ top: 0, behavior: "smooth" });
-}
-
-function renderAll() {
-  renderToday();
-  renderCalendar();
-  renderGarden();
-  renderJournal();
-  renderInsights();
-  renderAssistant();
-  renderSettings();
-}
-
-function renderToday() {
-  const now = new Date();
-  const hour = now.getHours();
-  $("todayGreeting").textContent = hour < 12 ? "Good morning 💜" : hour < 18 ? "Good afternoon 🌿" : "Good evening 🌙";
-  $("todayDate").textContent = now.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
-
-  const prediction = getPrediction();
-  if (prediction) {
-    $("predictionDate").textContent = prettyDate(prediction.date, { month: "long", day: "numeric", timeZone: "UTC" });
-    const until = diffDays(todayISO(), prediction.date);
-    $("predictionDetail").textContent = until >= 0 ? "About " + until + " day" + (until === 1 ? "" : "s") + " away • " + prediction.average + "-day average" : Math.abs(until) + " days past this estimate • log a new start when it arrives";
-    $("predictionConfidence").textContent = prediction.confidence;
-  } else {
-    $("predictionDate").textContent = "Add your first period";
-    $("predictionDetail").textContent = "Log a period start to begin.";
-    $("predictionConfidence").textContent = "Still learning";
-  }
-
-  const last = getLastEntryDate();
-  const returnBox = $("returnMessage");
-  if (last && last < todayISO()) {
-    const rested = diffDays(last, todayISO());
-    returnBox.hidden = false;
-    returnBox.textContent = "Welcome back 💜 Your garden has rested for " + rested + " day" + (rested === 1 ? "" : "s") + ". Everything you grew is still here.";
-  } else {
-    returnBox.hidden = true;
-  }
-
-  const garden = getGardenInfo();
-  const plantEmoji = garden.stage >= 4 ? "🌸" : garden.stage >= 2 ? "🌿" : garden.stage >= 1 ? "🌱" : "🫘";
-  $("miniPlant").textContent = plantEmoji;
-  $("gardenMiniStatus").textContent = garden.stageName;
-  $("gardenMiniDetail").textContent = garden.waterings + " care day" + (garden.waterings === 1 ? "" : "s");
-  $("activePlanBadge").textContent = planNames[state.settings.plan];
-}
-
-function loadCheckinForDate(date) {
-  const entry = state.entries[date] || {};
-  $("flowSelect").value = entry.flow || "none";
-  $("moodSelect").value = entry.mood || "";
-  $("periodToday").checked = Boolean(entry.period);
-  $("dailyReflection").value = entry.reflection || "";
-  const selected = new Set(entry.symptoms || []);
-  document.querySelectorAll("#symptomChips input[type=checkbox]").forEach(function (input) {
-    input.checked = selected.has(input.value);
-  });
-  $("saveCheckinStatus").textContent = state.entries[date] ? "Saved entry loaded." : "";
-  const requirement = $("checkinRequirement");
-  if (requirement) requirement.hidden = true;
-}
-
-async function saveCheckin(event) {
-  event.preventDefault();
-  const date = $("checkinDate").value;
-  if (!date) return;
-
-  const period = $("periodToday").checked;
-  const flow = $("flowSelect").value;
-  const mood = $("moodSelect").value;
-  const symptoms = Array.from(document.querySelectorAll("#symptomChips input:checked")).map(function (input) { return input.value; });
-  const reflection = $("dailyReflection").value.trim();
-  const hasMeaningfulEntry = period || flow !== "none" || Boolean(mood) || symptoms.length > 0 || reflection.length > 0;
-  const requirement = $("checkinRequirement");
-
-  if (!hasMeaningfulEntry) {
-    if (requirement) {
-      requirement.hidden = false;
-      requirement.classList.remove("attention");
-      void requirement.offsetWidth;
-      requirement.classList.add("attention");
-      requirement.scrollIntoView({ behavior: "smooth", block: "center" });
-    }
-    showToast("Add at least one feeling, symptom, cycle detail, or note before watering your plant. 🌱");
-    return;
-  }
-
-  if (requirement) requirement.hidden = true;
-
-  const existed = Boolean(state.entries[date]);
-  state.entries[date] = {
-    date: date,
-    period: period,
-    flow: flow,
-    mood: mood,
-    symptoms: symptoms,
-    reflection: reflection,
-    updatedAt: new Date().toISOString()
-  };
-
-  state.ui = state.ui || {};
-  state.ui.pendingGardenGrowth = true;
-
-  await persistState();
-  renderAll();
-  $("checkinDate").value = date;
-  loadCheckinForDate(date);
-  showToast(existed ? "Updated gently 💜 Your garden is ready to show a little growth." : "Saved — your plant had a drink today. Visit your garden to watch it grow. 🌱💧");
-}
-
-function renderCalendar() {
-  if (!state) return;
-  const year = calendarCursor.getFullYear();
-  const month = calendarCursor.getMonth();
-  $("calendarMonthLabel").textContent = calendarCursor.toLocaleDateString(undefined, { month: "long", year: "numeric" });
-
-  const first = new Date(year, month, 1);
-  const start = new Date(year, month, 1 - first.getDay());
-  const predicted = new Set(getPredictedPeriodDates());
-  const html = [];
-  for (let i = 0; i < 42; i += 1) {
-    const date = new Date(start);
-    date.setDate(start.getDate() + i);
-    const iso = date.getFullYear() + "-" + String(date.getMonth() + 1).padStart(2, "0") + "-" + String(date.getDate()).padStart(2, "0");
-    const entry = state.entries[iso];
-    const muted = date.getMonth() !== month;
-    const markers = [];
-    const isPeriod = Boolean(entry && entry.period);
-    const isLogged = Boolean(entry);
-    const isPredicted = predicted.has(iso) && !isPeriod;
-
-    if (isPeriod) markers.push('<i class="garden-day-marker period-marker" aria-label="Period">✿</i>');
-    if (isLogged) markers.push('<i class="garden-day-marker logged-marker" aria-label="Check-in">●</i>');
-    if (isPredicted) markers.push('<i class="garden-day-marker predicted-marker" aria-label="Forecast">○</i>');
-
-    html.push(
-      '<button type="button" class="calendar-day garden-day' +
-      (muted ? ' muted-day' : '') +
-      (iso === todayISO() ? ' today' : '') +
-      (isPeriod ? ' period-day' : '') +
-      (isLogged ? ' logged-day' : '') +
-      (isPredicted ? ' predicted-day' : '') +
-      '" data-calendar-date="' + iso + '">' +
-      '<span class="day-number">' + date.getDate() + '</span>' +
-      '<span class="garden-day-markers">' + markers.join("") + '</span>' +
-      '</button>'
-    );
-  }
-  $("calendarGrid").innerHTML = html.join("");
-}
-
-function playGardenGrowth() {
-  const moment = $("growthMoment");
-  const plant = $("plantArt");
-  if (!moment || !plant) return;
-
-  moment.hidden = false;
-  moment.classList.remove("is-playing");
-  plant.classList.remove("is-growing");
-  void moment.offsetWidth;
-  moment.classList.add("is-playing");
-  plant.classList.add("is-growing");
-
-  window.setTimeout(function () {
-    moment.classList.remove("is-playing");
-    plant.classList.remove("is-growing");
-    moment.hidden = true;
-  }, 2400);
-}
-
-function renderGarden() {
-  if (!state) return;
-  const garden = getGardenInfo();
-  $("plantArt").className = "plant-art stage-" + garden.stage;
-  $("plantStageName").textContent = garden.stageName;
-  $("plantStageMessage").textContent = garden.message;
-  $("gardenProgressBar").style.width = garden.progress + "%";
-  $("gardenProgressText").textContent = garden.stage === 5 ? "Your garden is in full bloom." : garden.waterings + " of " + garden.next + " care days toward the next stage";
-  $("wateringsCount").textContent = String(garden.waterings);
-  $("bloomsCount").textContent = String(garden.blooms);
-  $("gardenAge").textContent = String(garden.age);
-
-  $("memoryBlooms").innerHTML = garden.milestones.map(function (item) {
-    return '<div class="bloom-item' + (item.unlocked ? '' : ' locked') + '">' +
-      '<span class="bloom-icon">' + item.icon + '</span><div><strong>' + escapeHtml(item.label) + '</strong><small>' +
-      escapeHtml(item.unlocked ? item.detail + " • unlocked" : item.detail) + '</small></div></div>';
-  }).join("");
-
-  if (state.ui && state.ui.pendingGardenGrowth && $("view-garden").classList.contains("active")) {
-    state.ui.pendingGardenGrowth = false;
-    persistState();
-    window.requestAnimationFrame(playGardenGrowth);
-  }
-}
-
-async function saveJournal(event) {
-  event.preventDefault();
-  const date = $("journalDate").value;
-  const title = $("journalTitle").value.trim();
-  const text = $("journalText").value.trim();
-  if (!text) return;
-
-  if (journalEditingId) {
-    const existing = state.journals.find(function (entry) { return entry.id === journalEditingId; });
-    if (existing) {
-      existing.date = date;
-      existing.title = title;
-      existing.text = text;
-      existing.updatedAt = new Date().toISOString();
-    }
-    journalEditingId = null;
-  } else {
-    state.journals.push({
-      id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2),
-      date: date,
-      title: title,
-      text: text,
-      createdAt: new Date().toISOString()
-    });
-  }
-
-  state.journals.sort(function (a, b) { return b.date.localeCompare(a.date); });
-  await persistState();
-  $("journalTitle").value = "";
-  $("journalText").value = "";
-  $("journalDate").value = todayISO();
-  renderJournal();
-  showToast("Your private note is tucked safely away. 🔐💜");
-}
-
-function renderJournal() {
-  if (!state) return;
-  const list = $("journalList");
-  if (!state.journals.length) {
-    list.innerHTML = '<article class="card empty-state"><strong>No notes yet 💜</strong><br><span>This space is here whenever something feels worth remembering.</span></article>';
-    return;
-  }
-  list.innerHTML = state.journals.map(function (entry) {
-    return '<article class="journal-entry">' +
-      '<div class="journal-entry-head"><div><span class="eyebrow">' + escapeHtml(prettyDate(entry.date)) + '</span><h3>' +
-      escapeHtml(entry.title || "Untitled reflection") + '</h3></div>' +
-      '<div class="journal-actions"><button class="text-btn" type="button" data-edit-journal="' + escapeHtml(entry.id) + '">Edit</button>' +
-      '<button class="text-btn danger-text" type="button" data-delete-journal="' + escapeHtml(entry.id) + '">Delete</button></div></div>' +
-      '<p>' + escapeHtml(entry.text) + '</p></article>';
-  }).join("");
-}
-
-async function deleteJournal(id) {
-  const item = state.journals.find(function (entry) { return entry.id === id; });
-  if (!item) return;
-  if (!window.confirm("Delete this journal entry? This cannot be undone without an older encrypted backup.")) return;
-  state.journals = state.journals.filter(function (entry) { return entry.id !== id; });
-  await persistState();
-  renderJournal();
-  showToast("Journal entry deleted.");
-}
-
-function editJournal(id) {
-  const item = state.journals.find(function (entry) { return entry.id === id; });
-  if (!item) return;
-  journalEditingId = id;
-  $("journalDate").value = item.date;
-  $("journalTitle").value = item.title || "";
-  $("journalText").value = item.text;
-  $("journalText").focus();
-  window.scrollTo({ top: 0, behavior: "smooth" });
-}
-
-function renderBars(targetId, values) {
-  const target = $(targetId);
-  if (!values.length) {
-    target.className = "bar-chart empty-state";
-    target.textContent = targetId === "moodChart" ? "Your mood patterns will appear here over time." : "Your symptom patterns will gently appear here as you log more.";
-    return;
-  }
-  target.className = "bar-chart";
-  const max = Math.max.apply(null, values.map(function (item) { return item.count; }));
-  target.innerHTML = values.slice(0, 6).map(function (item) {
-    const width = Math.round((item.count / max) * 100);
-    const label = item.name.charAt(0).toUpperCase() + item.name.slice(1);
-    return '<div class="bar-row"><span>' + escapeHtml(label) + '</span><div class="bar-track"><span style="width:' + width + '%"></span></div><strong>' + item.count + '</strong></div>';
-  }).join("");
-}
-
-function renderInsights() {
-  if (!state) return;
-  const cycles = getCycleLengths();
-  const values = cycles.map(function (item) { return item.days; });
-  const avg = values.length ? Math.round(average(values)) : null;
-  $("avgCycleStat").textContent = avg == null ? "—" : String(avg);
-  $("cycleRangeStat").textContent = values.length ? Math.min.apply(null, values) + "–" + Math.max.apply(null, values) : "—";
-  $("trackedCyclesStat").textContent = String(getPeriodStarts().length);
-  $("checkinsStat").textContent = String(getEntryDates().length);
-
-  renderBars("symptomChart", getSymptomCounts());
-  renderBars("moodChart", getMoodCounts());
-
-  const target = $("cycleHistory");
-  if (!cycles.length) {
-    target.className = "cycle-history empty-state";
-    target.textContent = "Once you’ve logged two period starts, Vune can begin showing your cycle rhythm here.";
-  } else {
-    target.className = "cycle-history";
-    const recent = cycles.slice(-8);
-    const max = Math.max.apply(null, recent.map(function (item) { return item.days; }));
-    target.innerHTML = recent.map(function (item) {
-      const height = Math.max(35, Math.round((item.days / max) * 130));
-      return '<div class="cycle-bar-wrap"><strong>' + item.days + 'd</strong><div class="cycle-bar" style="height:' + height + 'px"></div><small>' + escapeHtml(prettyDate(item.start, { month: "short", day: "numeric", timeZone: "UTC" })) + '</small></div>';
-    }).join("");
-  }
-}
-
-function setCompanionOpen(open) {
-  const panel = $("companionPanel");
-  const launcher = $("companionLauncher");
-  if (!panel || !launcher) return;
-
-  panel.hidden = !open;
-  launcher.setAttribute("aria-expanded", String(open));
-  document.body.classList.toggle("companion-open", open);
-
-  if (open) {
-    renderAssistant();
-    const messages = $("assistantMessages");
-    if (messages) messages.scrollTop = messages.scrollHeight;
-  }
-}
-
-function renderAssistant() {
-  if (!state) return;
-  const supporter = state.settings.plan === "supporter";
-  $("assistantGate").hidden = supporter;
-  $("assistantExperience").hidden = !supporter;
-  if (!supporter) return;
-
-  const target = $("assistantMessages");
-  target.innerHTML = "";
-  if (!state.assistantMessages.length) {
-    addAssistantBubble("assistant", "Hi, I’m your Vune Companion ✦\n\nI’m here to help you notice patterns, make sense of what you’ve tracked, and get ready for appointments. Nothing you ask me in this test experience is sent to an outside AI provider.");
-  } else {
-    state.assistantMessages.forEach(function (message) {
-      addAssistantBubble(message.role, message.text);
-    });
-  }
-  target.scrollTop = target.scrollHeight;
-}
-
-function addAssistantBubble(role, text) {
-  const div = document.createElement("div");
-  div.className = "assistant-message " + role;
-  div.textContent = text;
-  $("assistantMessages").appendChild(div);
-}
-
-function assistantSummary() {
-  const cycles = getCycleLengths();
-  const symptoms = getSymptomCounts();
-  const prediction = getPrediction();
-  const parts = [];
-  if (cycles.length) {
-    const values = cycles.map(function (item) { return item.days; });
-    parts.push("Here’s what your cycle has been looking like lately 💜\n\nYour recorded cycles average about " + Math.round(average(values)) + " days, with a range of " + Math.min.apply(null, values) + "–" + Math.max.apply(null, values) + " days.");
-  } else {
-    parts.push("I’m still learning your rhythm 🌱 Once you’ve logged at least two period starts, I can give you a more useful cycle summary.");
-  }
-  if (symptoms.length) {
-    parts.push("The things you’ve been noticing most are " + symptoms.slice(0, 3).map(function (item) { return item.name + " (" + item.count + ")"; }).join(", ") + ".");
-  }
-  if (prediction) parts.push("Your current local estimate for the next period start is " + prettyDate(prediction.date) + ".");
-  parts.push("This is just a gentle summary of your own records — not a diagnosis — but it can help you notice what repeats over time.");
-  return parts.join("\n\n");
-}
-
-function appointmentSummary() {
-  const starts = getPeriodStarts();
-  const cycles = getCycleLengths();
-  const symptoms = getSymptomCounts();
-  const heavyDays = getEntryDates().filter(function (date) { return state.entries[date].flow === "heavy"; }).length;
-  const lines = ["Here’s a simple appointment prep note based on what you’ve tracked 💜"];
-  lines.push("• " + starts.length + " period start" + (starts.length === 1 ? "" : "s") + " logged.");
-  if (cycles.length) {
-    const values = cycles.map(function (item) { return item.days; });
-    lines.push("• Recorded cycle range: " + Math.min.apply(null, values) + "–" + Math.max.apply(null, values) + " days.");
-  }
-  if (symptoms.length) lines.push("• Most logged symptoms: " + symptoms.slice(0, 4).map(function (item) { return item.name; }).join(", ") + ".");
-  if (heavyDays) lines.push("• Heavy flow was logged on " + heavyDays + " day" + (heavyDays === 1 ? "" : "s") + ".");
-  lines.push("• You have " + state.journals.length + " private journal entr" + (state.journals.length === 1 ? "y" : "ies") + " available to review yourself.");
-  lines.push("\nYou could ask your clinician whether any of these patterns are expected for you or worth watching more closely. Vune can organize what you tracked, but it can’t diagnose a condition.");
-  return lines.join("\n");
-}
-
-function answerAssistant(prompt) {
-  const lower = prompt.toLowerCase();
-  if (/diagnos|do i have|pcos|endometri|fibroid|infection|am i pregnant|pregnant/.test(lower)) {
-    return "I can help organize what you’ve noticed, but I can’t tell you whether you have a medical condition. 💜\n\nIf you want, I can summarize your patterns or help you put together questions to bring to a clinician.";
-  }
-  if (/doctor|appointment|clinician|obgyn|ob-gyn/.test(lower)) return appointmentSummary();
-  if (/summary|summarize|pattern|overview/.test(lower)) return assistantSummary();
-  if (/next period|when.*period|prediction/.test(lower)) {
-    const prediction = getPrediction();
-    return prediction ? "Based on what you’ve logged so far, Vune’s current estimate is " + prettyDate(prediction.date) + ". 🌙\n\nThat uses an average cycle length of about " + prediction.average + " days, and it may shift as your body and your tracking change." : "I’m still learning your rhythm 🌱 Log a period start and I can begin making a gentle estimate.";
-  }
-  if (/symptom|cramp|headache|fatigue|bloat|acne|back pain|tender|craving/.test(lower)) {
-    const symptoms = getSymptomCounts();
-    if (!symptoms.length) return "Nothing to summarize here yet — and that’s completely okay. 🌿 Log symptoms only when it feels useful.";
-    const named = symptoms.find(function (item) { return lower.indexOf(item.name.toLowerCase()) >= 0; });
-    if (named) return "You’ve noticed " + named.name + " on " + named.count + " check-in day" + (named.count === 1 ? "" : "s") + ". I’m only reflecting what you recorded, not making a medical interpretation.";
-    return "Here’s what has been showing up most in your check-ins: " + symptoms.slice(0, 5).map(function (item) { return item.name + " (" + item.count + ")"; }).join(", ") + ". 💜";
-  }
-  if (/mood|feel|emotion/.test(lower)) {
-    const moods = getMoodCounts();
-    if (!moods.length) return "You haven’t added any moods yet. If you’d rather not track them, that’s okay too. 🌿";
-    return "The moods you’ve logged most often are " + moods.slice(0, 4).map(function (item) { return item.name + " (" + item.count + ")"; }).join(", ") + ". Think of this as a reflection, not a judgment. 💜";
-  }
-  if (/journal|diary|reflection/.test(lower)) {
-    return "You have " + state.journals.length + " saved journal entr" + (state.journals.length === 1 ? "y" : "ies") + " and " + getEntryDates().filter(function (date) { return Boolean(state.entries[date].reflection); }).length + " daily reflections. This prototype keeps them inside your encrypted browser vault.";
-  }
-  return "I can help with cycle summaries, things that keep showing up, mood patterns, period estimates, and appointment prep. ✦\n\nTry asking “What patterns are showing up?” or “Help me get ready for an appointment.”";
-}
-
-async function sendAssistant(event) {
-  event.preventDefault();
-  if (state.settings.plan !== "supporter") return;
-  const prompt = $("assistantPrompt").value.trim();
-  if (!prompt) return;
-  const response = answerAssistant(prompt);
-  state.assistantMessages.push({ role: "user", text: prompt, at: new Date().toISOString() });
-  state.assistantMessages.push({ role: "assistant", text: response, at: new Date().toISOString() });
-  $("assistantPrompt").value = "";
-  await persistState();
-  renderAssistant();
-}
-
-function generateHealthSummary() {
-  if (state.settings.plan !== "supporter") {
-    showToast("Switch to Supporter preview to test Health Summary.");
-    return;
-  }
-  const starts = getPeriodStarts();
-  const cycles = getCycleLengths();
-  const values = cycles.map(function (item) { return item.days; });
-  const symptoms = getSymptomCounts();
-  const moods = getMoodCounts();
-  const periodDays = getEntryDates().filter(function (date) { return state.entries[date].period; }).length;
-  const heavyDays = getEntryDates().filter(function (date) { return state.entries[date].flow === "heavy"; }).length;
-
-  let rows = "";
-  starts.slice(-6).reverse().forEach(function (start) {
-    rows += "<tr><td>" + escapeHtml(prettyDate(start)) + "</td><td>Period start logged</td></tr>";
-  });
-
-  $("reportContent").innerHTML =
-    '<div class="report-section"><p class="muted">Generated locally on ' + escapeHtml(new Date().toLocaleDateString()) + '. This summary organizes user-entered records and is not a diagnosis.</p></div>' +
-    '<div class="report-section"><h3>Cycle overview</h3><div class="report-grid">' +
-    '<div class="report-metric"><small>Period starts</small><strong>' + starts.length + '</strong></div>' +
-    '<div class="report-metric"><small>Average cycle</small><strong>' + (values.length ? Math.round(average(values)) + " days" : "—") + '</strong></div>' +
-    '<div class="report-metric"><small>Cycle range</small><strong>' + (values.length ? Math.min.apply(null, values) + "–" + Math.max.apply(null, values) + " days" : "—") + '</strong></div>' +
-    '</div></div>' +
-    '<div class="report-section"><h3>Tracking overview</h3><p>' + getEntryDates().length + ' daily check-ins • ' + periodDays + ' period days • ' + heavyDays + ' heavy-flow days • ' + state.journals.length + ' private journal entries.</p></div>' +
-    '<div class="report-section"><h3>Most logged symptoms</h3><p>' + (symptoms.length ? symptoms.slice(0, 6).map(function (item) { return escapeHtml(item.name) + " (" + item.count + ")"; }).join(", ") : "No symptoms logged.") + '</p></div>' +
-    '<div class="report-section"><h3>Most logged moods</h3><p>' + (moods.length ? moods.slice(0, 6).map(function (item) { return escapeHtml(item.name) + " (" + item.count + ")"; }).join(", ") : "No moods logged.") + '</p></div>' +
-    '<div class="report-section"><h3>Recent recorded period starts</h3>' + (rows ? '<table class="report-table"><thead><tr><th>Date</th><th>Record</th></tr></thead><tbody>' + rows + '</tbody></table>' : '<p>No period starts logged.</p>') + '</div>' +
-    '<div class="report-section"><h3>Suggested discussion prompts</h3><ul><li>Have my cycle lengths or symptoms changed in a way that matters clinically?</li><li>Are any of my logged flow or pain patterns worth evaluating?</li><li>What additional information would be useful to track?</li></ul></div>';
-
-  $("reportDialog").showModal();
-}
-
-function showSettingsCategory(name) {
-  const tabs = Array.from(document.querySelectorAll("[data-settings-tab]"));
-  const panels = Array.from(document.querySelectorAll("[data-settings-panel]"));
-  if (!tabs.length || !panels.length) return;
-
-  tabs.forEach(function (tab) {
-    const active = tab.dataset.settingsTab === name;
-    tab.classList.toggle("active", active);
-    tab.setAttribute("aria-selected", String(active));
-  });
-
-  panels.forEach(function (panel) {
-    const active = panel.dataset.settingsPanel === name;
-    panel.classList.toggle("active", active);
-    panel.hidden = !active;
-  });
-}
-
-function renderSettings() {
-  if (!state) return;
-
-  const currentPlan = state.settings.plan || "free";
-  const currentDetails = planDetails[currentPlan] || planDetails.free;
-  const currentCard = $("currentPlanCard");
-
-  if (currentCard) {
-    currentCard.innerHTML =
-      '<div class="current-plan-main">' +
-        '<div><span class="current-plan-label">Your plan</span><strong>' + escapeHtml(planNames[currentPlan]) + '</strong><small>' + escapeHtml(currentDetails.note) + '</small></div>' +
-        '<div class="current-plan-price">' + escapeHtml(currentDetails.price) + '</div>' +
-      '</div>' +
-      '<span class="current-plan-status">Current</span>';
-  }
-
-  document.querySelectorAll(".plan-card").forEach(function (button) {
-    const isCurrent = button.dataset.plan === currentPlan;
-    button.hidden = isCurrent;
-    button.classList.remove("active");
-    button.setAttribute("aria-hidden", String(isCurrent));
-  });
-
-  $("lockMinutesSelect").value = String(state.settings.lockMinutes);
-
-  const currentTab = document.querySelector("[data-settings-tab].active");
-  if (!currentTab) showSettingsCategory("plan");
-}
-
-async function selectPlan(plan) {
-  if (!planNames[plan]) return;
-  state.settings.plan = plan;
-  await persistState();
-  renderAll();
-  showToast(planNames[plan] + " is ready to explore ✨ No payment was collected.");
-}
-
-async function exportBackup() {
-  await persistState();
-  const backup = {
-    format: "vune-web-encrypted-backup",
-    version: 1,
-    createdAt: new Date().toISOString(),
-    salt: localStorage.getItem(SALT_KEY),
-    payload: localStorage.getItem(DATA_KEY)
-  };
-  const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "vune-encrypted-backup-" + todayISO() + ".json";
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
-  showToast("Encrypted backup exported.");
-}
-
-async function importBackup(file) {
-  const text = await file.text();
-  const backup = JSON.parse(text);
-  if (!backup || backup.format !== "vune-web-encrypted-backup" || !backup.salt || !backup.payload) throw new Error("Invalid Vune backup");
-  if (!window.confirm("Replace this browser's current Vune vault with the selected encrypted backup?")) return;
-  localStorage.setItem(SALT_KEY, backup.salt);
-  localStorage.setItem(DATA_KEY, backup.payload);
-  await lockApp();
-  showToast("Backup imported. Unlock it with the passcode used when it was exported.");
-}
-
-async function changePasscode() {
-  const first = window.prompt("Create a new Vune passcode (at least 6 characters).");
-  if (first == null) return;
-  if (first.length < 6) {
-    showToast("Passcode must be at least 6 characters.");
-    return;
-  }
-  const second = window.prompt("Confirm the new passcode.");
-  if (second !== first) {
-    showToast("Passcodes did not match.");
-    return;
-  }
-  const salt = crypto.getRandomValues(new Uint8Array(16));
-  const newKey = await deriveKey(first, salt);
-  currentKey = newKey;
-  localStorage.setItem(SALT_KEY, toBase64(salt));
-  await persistState();
-  showToast("Passcode changed. Export a fresh backup if you keep backups.");
-}
-
-function deleteAllData() {
-  if (!window.confirm("Delete all Vune data stored in this browser? This cannot be undone without an encrypted backup.")) return;
-  if (!window.confirm("Final confirmation: permanently reset this browser copy of Vune?")) return;
-  localStorage.removeItem(DATA_KEY);
-  localStorage.removeItem(SALT_KEY);
-  state = null;
-  currentKey = null;
-  location.reload();
-}
-
-function bindEvents() {
-  $("setupForm").addEventListener("submit", async function (event) {
-    event.preventDefault();
-    const first = $("newPasscode").value;
-    const second = $("confirmPasscode").value;
-    if (first.length < 6) {
-      showToast("Use at least 6 characters.");
-      return;
-    }
-    if (first !== second) {
-      showToast("Passcodes do not match.");
-      return;
-    }
-    try {
-      await setupVault(first);
-      $("newPasscode").value = "";
-      $("confirmPasscode").value = "";
-      showToast("Encrypted Vune vault created.");
-    } catch (error) {
-      showToast("Could not create the encrypted vault in this browser.");
-    }
-  });
-
-  $("unlockForm").addEventListener("submit", async function (event) {
-    event.preventDefault();
-    $("unlockError").textContent = "";
-    try {
-      await unlockVault($("unlockPasscode").value);
-    } catch (error) {
-      $("unlockError").textContent = "That passcode could not unlock this vault.";
-    }
-  });
-
-  $("resetFromLock").addEventListener("click", function () {
-    if (window.confirm("Reset the encrypted Vune vault stored in this browser?")) {
-      localStorage.removeItem(DATA_KEY);
-      localStorage.removeItem(SALT_KEY);
-      location.reload();
-    }
-  });
-
-  document.querySelectorAll(".nav-btn[data-view]").forEach(function (button) {
-    button.addEventListener("click", function () { showView(button.dataset.view); });
-  });
-  document.addEventListener("click", function (event) {
-    const go = event.target.closest("[data-go]");
-    if (go) {
-      showView(go.dataset.go);
-      setCompanionOpen(false);
-    }
-
-    const calendarDay = event.target.closest("[data-calendar-date]");
-    if (calendarDay && state) {
-      $("checkinDate").value = calendarDay.dataset.calendarDate;
-      loadCheckinForDate(calendarDay.dataset.calendarDate);
-      showView("today");
-    }
-
-    const edit = event.target.closest("[data-edit-journal]");
-    if (edit) editJournal(edit.dataset.editJournal);
-
-    const del = event.target.closest("[data-delete-journal]");
-    if (del) deleteJournal(del.dataset.deleteJournal);
-
-    const prompt = event.target.closest("[data-assistant-prompt]");
-    if (prompt && state && state.settings.plan === "supporter") {
-      $("assistantPrompt").value = prompt.dataset.assistantPrompt;
-      $("assistantPrompt").focus();
-    }
-
-    const plan = event.target.closest("[data-plan]");
-    if (plan && state) selectPlan(plan.dataset.plan);
-
-    const settingsTab = event.target.closest("[data-settings-tab]");
-    if (settingsTab) showSettingsCategory(settingsTab.dataset.settingsTab);
-
-    const journalPrompt = event.target.closest("[data-journal-prompt]");
-    if (journalPrompt && state) {
-      const field = $("journalText");
-      const promptText = journalPrompt.dataset.journalPrompt || "";
-      if (!field.value.trim()) field.value = promptText;
-      else field.value = field.value + "\n\n" + promptText;
-      field.focus();
-      field.setSelectionRange(field.value.length, field.value.length);
-    }
-  });
-
-  $("checkinForm").addEventListener("submit", saveCheckin);
-  $("checkinDate").addEventListener("change", function () { if (state) loadCheckinForDate($("checkinDate").value); });
-  $("journalForm").addEventListener("submit", saveJournal);
-  $("assistantForm").addEventListener("submit", sendAssistant);
-
-  $("companionLauncher").addEventListener("click", function () {
-    setCompanionOpen($("companionPanel").hidden);
-  });
-  $("closeCompanionBtn").addEventListener("click", function () {
-    setCompanionOpen(false);
-  });
-
-  $("prevMonth").addEventListener("click", function () {
-    calendarCursor.setMonth(calendarCursor.getMonth() - 1);
-    renderCalendar();
-  });
-  $("nextMonth").addEventListener("click", function () {
-    calendarCursor.setMonth(calendarCursor.getMonth() + 1);
-    renderCalendar();
-  });
-
-  $("lockNowBtn").addEventListener("click", lockApp);
-  $("mobileLockBtn").addEventListener("click", lockApp);
-  $("generateReportBtn").addEventListener("click", generateHealthSummary);
-  $("closeReportBtn").addEventListener("click", function () { $("reportDialog").close(); });
-  $("closeReportBtn2").addEventListener("click", function () { $("reportDialog").close(); });
-  $("printReportBtn").addEventListener("click", function () { window.print(); });
-
-  $("lockMinutesSelect").addEventListener("change", async function () {
-    state.settings.lockMinutes = Number($("lockMinutesSelect").value);
-    await persistState();
-    scheduleAutoLock();
-    showToast("Your privacy preference is saved. 🔐");
-  });
-
-  $("changePasscodeBtn").addEventListener("click", changePasscode);
-  $("exportBackupBtn").addEventListener("click", exportBackup);
-  $("importBackupInput").addEventListener("change", async function (event) {
-    const file = event.target.files && event.target.files[0];
-    if (!file) return;
-    try {
-      await importBackup(file);
-    } catch (error) {
-      showToast("That file is not a valid Vune encrypted backup.");
-    }
-    event.target.value = "";
-  });
-  $("deleteAllBtn").addEventListener("click", deleteAllData);
-
-  ["pointerdown", "keydown", "touchstart"].forEach(function (name) {
-    document.addEventListener(name, noteActivity, { passive: true });
-  });
-
-  document.addEventListener("keydown", function (event) {
-    if (event.key === "Escape" && !$("companionPanel").hidden) {
-      setCompanionOpen(false);
-    }
-  });
-
-  document.addEventListener("visibilitychange", function () {
-    if (document.hidden) {
-      document.body.classList.add("privacy-hidden");
-      if (state && Number(state.settings.lockMinutes) === 0) lockApp();
-    } else {
-      document.body.classList.remove("privacy-hidden");
-    }
-  });
-}
-
-async function init() {
-  if (!window.crypto || !window.crypto.subtle) {
-    document.body.innerHTML = '<main style="max-width:680px;margin:60px auto;padding:24px;font-family:system-ui"><h1>Vune needs a secure browser context</h1><p>This prototype requires Web Crypto. Open it over HTTPS or localhost in a modern browser.</p></main>';
-    return;
-  }
-
-  bindEvents();
-  if (hasVault()) showUnlock();
-  else showSetup();
-
-  if ("serviceWorker" in navigator) {
-    window.addEventListener("load", function () {
-      navigator.serviceWorker.register("./service-worker.js").catch(function () { /* offline install is optional */ });
-    });
-  }
-}
-
-document.addEventListener("DOMContentLoaded", init);
+document.addEventListener("DOMContentLoaded",init);
