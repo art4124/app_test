@@ -443,3 +443,34 @@ body.theme-dark #saveCheckinStatus.checkin-save-confirmation{
   color:var(--vune-accent-ink)!important;
   border-color:var(--vune-accent)!important;
 }
+
+
+/* Dedicated Bloom Notes entries page. */
+.journal-history-page-list{
+  display:grid;
+  gap:16px;
+}
+.journal-history-entry{
+  display:grid;
+  gap:14px;
+  padding:22px;
+}
+.journal-history-entry.selected{
+  outline:2px solid var(--vune-accent);
+  outline-offset:2px;
+}
+.journal-history-text{
+  margin:0;
+  white-space:pre-wrap;
+  line-height:1.7;
+  overflow-wrap:anywhere;
+}
+.journal-view-all{
+  margin-top:12px;
+  width:max-content;
+  max-width:100%;
+}
+body.theme-dark .journal-history-entry{
+  background:var(--vune-dark-surface-2)!important;
+  border-color:#51485a!important;
+}
