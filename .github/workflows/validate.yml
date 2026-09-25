@@ -33,6 +33,7 @@ jobs:
           test -f surgical-fixes-2026-09-25.css
           test -f app.js
           test -f surgical-fixes-2026-09-25.js
+          test -f checkin-hotfix.js
           test -f manifest.webmanifest
           test -f service-worker.js
           test -f privacy.html
@@ -54,6 +55,9 @@ jobs:
 
       - name: Verify check-in watering handoff
         run: |
+          grep -q 'checkin-hotfix.js' index.html
+          grep -q 'isFirstCheckinForDate' checkin-hotfix.js
+          grep -q 'state.ui.pendingGardenGrowth = isFirstCheckinForDate' checkin-hotfix.js
           grep -q 'isFirstCheckinForDate' surgical-fixes-2026-09-25.js
           grep -q 'state.ui.pendingGardenGrowth = isFirstCheckinForDate' surgical-fixes-2026-09-25.js
           grep -q 'showView("garden")' surgical-fixes-2026-09-25.js
