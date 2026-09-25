@@ -98,3 +98,11 @@ jobs:
           grep -q '"butter"' corrections.js
           grep -q '"mauve"' corrections.js
           grep -q 'VUNE_ALL_ACCENTS' batch-2026-09-25.js
+
+      - name: Verify Bloom Notes history routing
+        run: |
+          grep -q 'vuneRenderJournalEntries' surgical-fixes-2026-09-25.js
+          grep -q 'view-journal-entries' surgical-fixes-2026-09-25.js
+          grep -q 'data-view-all-journals' surgical-fixes-2026-09-25.js
+          grep -q 'entries\[0\]' surgical-fixes-2026-09-25.js
+          grep -q 'journal-history-page-list' surgical-fixes-2026-09-25.css
