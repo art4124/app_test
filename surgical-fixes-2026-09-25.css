@@ -206,3 +206,54 @@ body.theme-dark[class*="accent-"] .card-icon{
   color:var(--vune-accent-ink)!important;
   border-color:var(--vune-accent)!important;
 }
+
+
+/* Screenshot pass: remove dark rectangular bleed without changing component structure. */
+body.theme-dark .current-plan-section{
+  background:transparent!important;
+  border-color:transparent!important;
+}
+body.theme-dark .current-plan-card{
+  background:var(--vune-dark-surface-2)!important;
+  border-color:#51485a!important;
+  border-radius:18px!important;
+  overflow:hidden!important;
+}
+body.theme-dark .journey-card,
+body.theme-dark .entry-journey{
+  background:var(--vune-dark-surface)!important;
+}
+body.theme-dark .journey-step{
+  background:transparent!important;
+  border-bottom-color:#4b4352!important;
+}
+
+/* Keep Daily Check-in fields inside the card at every browser size/zoom. */
+.journey-card,
+.entry-journey,
+.journey-step,
+.step-content,
+.form-grid,
+.form-grid > *,
+.main-content,
+.view{
+  min-width:0;
+  max-width:100%;
+}
+.form-grid.two{
+  grid-template-columns:repeat(2,minmax(0,1fr));
+}
+input,
+select,
+textarea{
+  min-width:0;
+  max-width:100%;
+}
+@media(max-width:760px){
+  .form-grid.two{grid-template-columns:1fr;}
+}
+
+/* Never show an empty return banner. */
+#returnMessage:empty{
+  display:none!important;
+}
