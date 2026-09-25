@@ -140,13 +140,13 @@ function bindEvents(){
     const plan=e.target.closest("[data-plan]");if(plan&&state){selectPlan(plan.dataset.plan);return;}
     const tab=e.target.closest("[data-settings-tab]");if(tab){showSettingsCategory(tab.dataset.settingsTab);return;}
     const jump=e.target.closest("[data-settings-jump]");if(jump){showSettingsCategory(jump.dataset.settingsJump);return;}
-    const ap=e.target.closest("[data-appearance]");if(ap&&state){state.settings.appearance=ap.dataset.appearance;persistState();applyAppearance();return;}
+    const ap=e.target.closest("[data-appearance]");if(ap&&state){state.settings.appearance=ap.dataset.appearance;persistState().catch(function(){});applyAppearance();return;}
     const jp=e.target.closest("[data-journal-prompt]");if(jp&&state&&hasJournal()){const f=safe("journalText"),txt=jp.dataset.journalPrompt||"";f.value=f.value.trim()?f.value+"\n\n"+txt:txt;f.focus();return;}
     if(e.target.id==="restoreBackupBtn"){ensureRecoveryModal();safe("recoveryModal").hidden=false;return;}
     if(e.target.id==="showRecoveryKeyBtn"){showCurrentRecoveryKey();return;}
     if(e.target.id==="deleteAllBtn"){deleteAllData();return;}
-    if(e.target.id==="saveCompanionNameBtn"){const v=safe("companionNameInput").value.trim();state.settings.companionName=v||"Luma";persistState();renderAssistant();showToast("Companion name saved.");return;}
-    if(e.target.id==="resetCompanionNameBtn"){state.settings.companionName="Luma";persistState();renderSettings();renderAssistant();showToast("Companion name reset to Luma.");return;}
+    if(e.target.id==="saveCompanionNameBtn"){const v=safe("companionNameInput").value.trim();state.settings.companionName=v||"Luma";persistState().catch(function(){});renderAssistant();showToast("Companion name saved.");return;}
+    if(e.target.id==="resetCompanionNameBtn"){state.settings.companionName="Luma";persistState().catch(function(){});renderSettings();renderAssistant();showToast("Companion name reset to Luma.");return;}
   });
   safe("checkinForm").addEventListener("submit",saveCheckin);safe("checkinDate").addEventListener("change",()=>loadCheckinForDate(safe("checkinDate").value));safe("journalForm").addEventListener("submit",saveJournal);safe("assistantForm").addEventListener("submit",sendAssistant);
   safe("companionLauncher").addEventListener("click",()=>setCompanionOpen(safe("companionPanel").hidden));safe("closeCompanionBtn").addEventListener("click",()=>setCompanionOpen(false));
@@ -454,7 +454,7 @@ renderSettings = function(){
   const savedPlan = localStorage.getItem(VUNE_BETA_PLAN_KEY);
   if(savedPlan && planNames[savedPlan] && savedPlan !== state.settings.plan){
     state.settings.plan = savedPlan;
-    persistState();
+    persistState().catch(function(){});
   }
   const completeUnlock = document.querySelector('.plan-card[data-plan="complete"] .new-unlock');
   if(completeUnlock) completeUnlock.textContent = "Adds Advanced Pattern Insights";
@@ -1064,6 +1064,23 @@ selectPlan = vuneSetBetaPlan;
       (typeof VUNE_ACCENTS !== "undefined" ? VUNE_ACCENTS : ["lavender"]);
     if(!accentList.includes(next.settings.accent)) next.settings.accent = "lavender";
     if(!next.entries || typeof next.entries !== "object" || Array.isArray(next.entries)) next.entries = {};
+    const cleanEntries = {};
+    Object.keys(next.entries).forEach(function(date){
+      const entry = next.entries[date];
+      if(!entry || typeof entry !== "object" || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return;
+      cleanEntries[date] = {
+        id: entry.id || null,
+        date: date,
+        period: Boolean(entry.period),
+        flow: typeof entry.flow === "string" ? entry.flow : "none",
+        mood: typeof entry.mood === "string" ? entry.mood : "",
+        symptoms: Array.isArray(entry.symptoms) ? entry.symptoms.filter(function(value){ return typeof value === "string"; }) : [],
+        reflection: typeof entry.reflection === "string" ? entry.reflection : "",
+        submittedAt: typeof entry.submittedAt === "string" ? entry.submittedAt : null,
+        updatedAt: typeof entry.updatedAt === "string" ? entry.updatedAt : null
+      };
+    });
+    next.entries = cleanEntries;
     next.journals = Array.isArray(next.journals)
       ? next.journals.filter(function(j){ return j && typeof j === "object" && j.date && typeof j.text === "string"; })
       : [];
