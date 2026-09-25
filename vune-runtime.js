@@ -1718,3 +1718,49 @@ selectPlan = vuneSetBetaPlan;
     try{ window.top.location = window.self.location.href; }catch(error){}
   }
 })();
+
+
+
+/* =========================================================
+   VUNE AUDIT FOLLOW-UP — multiple-check-in analytics + tier copy
+   ========================================================= */
+(function(){
+  "use strict";
+
+  planDetails.free = {price:"$0",note:"Cycle tracking + daily check-ins",unlock:"Track your cycle and review your history"};
+  planDetails.essential = {price:"$4.99 / month",note:"Free + Predictions & Analytics",unlock:"Adds period prediction and pattern summaries"};
+  planDetails.plus = {price:"$12.99 / month",note:"Essential + Bloom Notes",unlock:"Adds the private Bloom Notes journal"};
+  planDetails.complete = {price:"$24.99 / month",note:"Plus + Advanced Pattern Details",unlock:"Adds expanded pattern and cycle detail"};
+  planDetails.supporter = {price:"$32.99 / month",note:"Complete + Companion & Health Summary",unlock:"Adds Vune Companion, appointment prep, and Health Summary"};
+
+  function vuneAllCheckins(){
+    if(state && Array.isArray(state.checkinHistory) && state.checkinHistory.length) return state.checkinHistory;
+    return Object.values((state && state.entries) || {}).filter(Boolean);
+  }
+
+  getSymptomCounts = function(){
+    const counts = {};
+    vuneAllCheckins().forEach(function(entry){
+      (entry.symptoms || []).forEach(function(symptom){
+        counts[symptom] = (counts[symptom] || 0) + 1;
+      });
+    });
+    return Object.keys(counts).map(function(name){ return {name:name,count:counts[name]}; })
+      .sort(function(a,b){ return b.count-a.count; });
+  };
+
+  getMoodCounts = function(){
+    const counts = {};
+    vuneAllCheckins().forEach(function(entry){
+      if(entry.mood) counts[entry.mood] = (counts[entry.mood] || 0) + 1;
+    });
+    return Object.keys(counts).map(function(name){ return {name:name,count:counts[name]}; })
+      .sort(function(a,b){ return b.count-a.count; });
+  };
+
+  vuneRecentEntries = function(limit){
+    return vuneAllCheckins().slice().sort(function(a,b){
+      return String(b.submittedAt || b.updatedAt || b.date || "").localeCompare(String(a.submittedAt || a.updatedAt || a.date || ""));
+    }).slice(0,limit || 30);
+  };
+})();
