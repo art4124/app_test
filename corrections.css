@@ -1,0 +1,74 @@
+/* Vune beta correction batch */
+:root{--vune-accent:#8b68b6;--vune-accent-soft:#efe7f6;--vune-accent-ink:#5f4277}
+body.accent-lavender{--vune-accent:#9b7fbd;--vune-accent-soft:#efe8f6;--vune-accent-ink:#62497c}
+body.accent-blue{--vune-accent:#8fb7d7;--vune-accent-soft:#e8f3fa;--vune-accent-ink:#365f7d}
+body.accent-mint{--vune-accent:#9ccdb8;--vune-accent-soft:#e8f6ef;--vune-accent-ink:#376a55}
+body.accent-pink{--vune-accent:#d7a7bf;--vune-accent-soft:#faedf4;--vune-accent-ink:#7c4a63}
+body.accent-peach{--vune-accent:#e7b496;--vune-accent-soft:#fcf0e9;--vune-accent-ink:#80543c}
+body.theme-dark.accent-lavender{--vune-accent:#c8afe2;--vune-accent-soft:#372f40;--vune-accent-ink:#f0e6f8}
+body.theme-dark.accent-blue{--vune-accent:#afd3ee;--vune-accent-soft:#283945;--vune-accent-ink:#e8f6ff}
+body.theme-dark.accent-mint{--vune-accent:#b6dfcc;--vune-accent-soft:#293b34;--vune-accent-ink:#effcf6}
+body.theme-dark.accent-pink{--vune-accent:#e6bfd1;--vune-accent-soft:#42313a;--vune-accent-ink:#fff0f7}
+body.theme-dark.accent-peach{--vune-accent:#f0c5aa;--vune-accent-soft:#43352e;--vune-accent-ink:#fff2ea}
+
+/* Apply the chosen pastel accent to the main interactive language. */
+body .primary-btn,body .companion-launcher,body .progress-track>span{background:var(--vune-accent)!important}
+body .text-btn,body .text-link,body .eyebrow,body .plan-badge{color:var(--vune-accent-ink)}
+body .appearance-option.active,body .accent-option.active{outline:2px solid var(--vune-accent)!important;outline-offset:2px}
+body .nav-btn.active,body .settings-tab.active{border-color:var(--vune-accent)!important;background:var(--vune-accent-soft)!important;color:var(--vune-accent-ink)!important}
+body.theme-dark .nav-btn.active,body.theme-dark .settings-tab.active{color:var(--vune-accent-ink)!important}
+
+/* Appearance palette */
+.accent-picker{margin-top:22px;padding-top:20px;border-top:1px solid rgba(105,82,118,.13)}
+.accent-heading{display:flex;flex-direction:column;gap:3px;margin-bottom:12px}.accent-heading small{color:#6b6071}
+.accent-options{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+.accent-option{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-height:82px;padding:10px;border:1px solid rgba(94,75,106,.15);border-radius:14px;background:#fff;color:#3c3341;font:inherit;font-size:.78rem;font-weight:750;cursor:pointer}
+.accent-option span{width:28px;height:28px;border-radius:50%;box-shadow:inset 0 0 0 1px rgba(0,0,0,.06)}
+.accent-option[data-accent="lavender"] span{background:#cbb5df}.accent-option[data-accent="blue"] span{background:#b8d7ec}.accent-option[data-accent="mint"] span{background:#bce1d1}.accent-option[data-accent="pink"] span{background:#e8bfd2}.accent-option[data-accent="peach"] span{background:#f0c9b1}
+body.theme-dark .accent-option{background:#2a2630;color:#f7f2f8;border-color:#51485a}body.theme-dark .accent-heading small{color:#d2c8d7!important}
+
+/* Unlock/setup screen must fully inherit the selected appearance. */
+body.theme-dark .lock-screen{background:#17151b!important;color:#f7f2f8!important}
+body.theme-dark .lock-card,body.theme-dark .warm-lock-card{background:#211e26!important;color:#f7f2f8!important;border-color:#4b4352!important;box-shadow:0 24px 65px rgba(0,0,0,.42)!important}
+body.theme-dark .lock-card h1,body.theme-dark .lock-card h2,body.theme-dark .lock-card label,body.theme-dark .brand-lockup h1,body.theme-dark .brand-lockup p{color:#f7f2f8!important}
+body.theme-dark .lock-card .muted,body.theme-dark .lock-card .security-note,body.theme-dark .lock-card small{color:#d2c8d7!important}
+body.theme-dark .lock-card input{background:#2c2832!important;color:#fff!important;border-color:#5c5265!important}
+body.theme-dark .lock-card input::placeholder{color:#aaa0b0!important}
+body.theme-dark .lock-art{opacity:.9}
+
+/* Full dark-mode readability audit for surfaces that retained light backgrounds. */
+body.theme-dark .welcome-hero,body.theme-dark .compact-home-hero,body.theme-dark .journey-step,body.theme-dark .checkin-card,body.theme-dark .soft-card,body.theme-dark .garden-calendar-card,body.theme-dark .memory-card,body.theme-dark .journal-entry,body.theme-dark .privacy-promise>div,body.theme-dark .current-plan-section,body.theme-dark .pattern-detail-card{background:#211e26!important;color:#f7f2f8!important;border-color:#4b4352!important}
+body.theme-dark .welcome-hero h2,body.theme-dark .welcome-hero .eyebrow,body.theme-dark .welcome-hero #todayDate,body.theme-dark .journey-step h3,body.theme-dark .journey-step h4,body.theme-dark .journey-step p,body.theme-dark .checkin-card h3,body.theme-dark .checkin-card label,body.theme-dark .card-heading,body.theme-dark .section-title-row h3,body.theme-dark .page-heading h2,body.theme-dark .page-heading p{color:#f7f2f8!important}
+body.theme-dark .muted,body.theme-dark .journey-step p,body.theme-dark .label-optional,body.theme-dark .entry-requirement{color:#d6ccd9!important}
+body.theme-dark .privacy-pill{background:#312b38!important;color:#f2eaf5!important;border-color:#554b61!important}
+body.theme-dark .check-chip span,body.theme-dark .period-toggle,body.theme-dark .journal-prompts button{background:#2b2731!important;color:#f7f2f8!important;border-color:#51485a!important}
+body.theme-dark .check-chip input:checked+span{background:var(--vune-accent-soft)!important;color:var(--vune-accent-ink)!important;border-color:var(--vune-accent)!important}
+
+/* Calendar selected date expands into the same footprint as the month tiles. */
+.calendar-grid.detail-open{display:block;min-height:552px}
+.calendar-expanded-day{min-height:552px;width:100%;padding:28px;border-radius:20px;background:#fff;border:1px solid rgba(95,74,108,.12);display:flex;flex-direction:column;gap:20px}
+.calendar-expanded-head{display:flex;justify-content:space-between;align-items:flex-start;gap:18px}.calendar-expanded-head h3{margin:.35rem 0 0;font-size:1.4rem}.calendar-expanded-day .day-detail-items{max-width:700px;width:100%}.calendar-back-btn{align-self:flex-start;margin-top:auto}
+body.theme-dark .calendar-expanded-day{background:#211e26;color:#f7f2f8;border-color:#4b4352}
+
+/* Bloom Notes saved-card collision fixes. */
+.journal-entry.compact-entry{overflow:hidden}.journal-entry.compact-entry .journal-entry-head{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;align-items:center}.journal-entry.compact-entry .journal-entry-head>div:first-child{min-width:0}.journal-entry.compact-entry h3{overflow-wrap:anywhere}.journal-entry.compact-entry .journal-actions{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:nowrap}.journal-entry.compact-entry .journal-actions button{white-space:nowrap}
+
+/* Pattern summary + dedicated detail view. */
+.pattern-see-more{margin-top:14px}.pattern-detail-view .page-heading{align-items:flex-start}.pattern-detail-card{display:grid;gap:10px;max-width:780px}.pattern-detail-row{display:flex;justify-content:space-between;gap:18px;padding:14px 4px;border-bottom:1px solid rgba(95,74,108,.12)}.pattern-detail-row:last-child{border-bottom:0}.pattern-detail-row strong{white-space:nowrap}
+body.theme-dark .pattern-detail-row{border-color:#4b4352}
+
+/* Sidebar alignment: center legal/private text to Lock my space's axis. */
+.sidebar-footer{display:flex!important;flex-direction:column;align-items:center!important}.sidebar-footer .privacy-pill,.sidebar-footer .text-link,.sidebar-footer #lockNowBtn{width:100%;max-width:190px;text-align:center;justify-content:center}.sidebar-footer .text-link{display:block}
+
+/* Data settings spacing. */
+.settings-panel[data-settings-panel="data"] .settings-mini-card+.settings-mini-card{margin-top:24px}
+
+/* Active plan belongs only in Current plan, not the chooser below. */
+.settings-panel[data-settings-panel="plan"] .plan-card[hidden]{display:none!important}
+
+/* Complete tier copy correction. */
+.plan-card[data-plan="complete"] .new-unlock:before{content:"Adds Vune AI Companion"!important}
+
+@media(max-width:900px){.accent-options{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:720px){.accent-options{grid-template-columns:repeat(2,minmax(0,1fr))}.calendar-grid.detail-open,.calendar-expanded-day{min-height:470px}.calendar-expanded-day{padding:20px}.journal-entry.compact-entry .journal-entry-head{grid-template-columns:1fr}.journal-entry.compact-entry .journal-actions{justify-content:flex-start}.pattern-detail-row{align-items:flex-start;flex-direction:column;gap:5px}}
+@media(prefers-reduced-motion:reduce){.accent-option,.calendar-expanded-day{transition:none!important}}
