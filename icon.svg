@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Vune flower icon">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#8d6bb4"/>
+      <stop offset="1" stop-color="#51336f"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="118" fill="url(#bg)"/>
+  <g fill="#efe6f7">
+    <ellipse cx="256" cy="166" rx="62" ry="94"/>
+    <ellipse cx="346" cy="256" rx="94" ry="62"/>
+    <ellipse cx="256" cy="346" rx="62" ry="94"/>
+    <ellipse cx="166" cy="256" rx="94" ry="62"/>
+  </g>
+  <circle cx="256" cy="256" r="58" fill="#c9aedf"/>
+  <path d="M240 214h33l-17 94h-31z" fill="#6b4891" opacity=".9"/>
+</svg>
