@@ -1,6 +1,6 @@
 "use strict";
 
-const CACHE = "vune-web-v24-theme-and-checkin-confirmation";
+const CACHE = "vune-web-v25-ten-accent-persistence";
 const APP_SHELL = [
   "./",
   "./index.html",
