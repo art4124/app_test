@@ -1,6 +1,6 @@
 "use strict";
 
-const CACHE = "vune-web-v14-dark-card-overflow";
+const CACHE = "vune-web-v15-monthly-pricing";
 const APP_SHELL = [
   "./",
   "./index.html",
