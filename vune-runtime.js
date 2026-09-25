@@ -1887,3 +1887,43 @@ ensureRecoveryModal = function(){
     return result;
   };
 })();
+
+
+/* =========================================================
+   VUNE ACCESSIBILITY COMPLETION — modal background isolation
+   ========================================================= */
+(function(){
+  "use strict";
+
+  function vuneSyncOverlayInert(){
+    const terms = safe("termsGate");
+    const recovery = safe("recoveryModal");
+    const active = Boolean((terms && !terms.hidden) || (recovery && !recovery.hidden));
+    const app = safe("appShell");
+    const lock = safe("lockScreen");
+    if(app) app.inert = active;
+    if(lock) lock.inert = active;
+  }
+
+  function vuneWatchOverlay(overlay){
+    if(!overlay || overlay.dataset.vuneInertWatched === "true") return;
+    overlay.dataset.vuneInertWatched = "true";
+    const observer = new MutationObserver(vuneSyncOverlayInert);
+    observer.observe(overlay,{attributes:true,attributeFilter:["hidden"]});
+    vuneSyncOverlayInert();
+  }
+
+  const vuneA11yEnsureTermsBase = ensureTermsGate;
+  ensureTermsGate = function(){
+    const result = vuneA11yEnsureTermsBase();
+    vuneWatchOverlay(safe("termsGate"));
+    return result;
+  };
+
+  const vuneA11yEnsureRecoveryBase = ensureRecoveryModal;
+  ensureRecoveryModal = function(){
+    const result = vuneA11yEnsureRecoveryBase();
+    vuneWatchOverlay(safe("recoveryModal"));
+    return result;
+  };
+})();
