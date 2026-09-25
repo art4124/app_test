@@ -826,12 +826,33 @@ function generateHealthSummary() {
   $("reportDialog").showModal();
 }
 
+function showSettingsCategory(name) {
+  const tabs = Array.from(document.querySelectorAll("[data-settings-tab]"));
+  const panels = Array.from(document.querySelectorAll("[data-settings-panel]"));
+  if (!tabs.length || !panels.length) return;
+
+  tabs.forEach(function (tab) {
+    const active = tab.dataset.settingsTab === name;
+    tab.classList.toggle("active", active);
+    tab.setAttribute("aria-selected", String(active));
+  });
+
+  panels.forEach(function (panel) {
+    const active = panel.dataset.settingsPanel === name;
+    panel.classList.toggle("active", active);
+    panel.hidden = !active;
+  });
+}
+
 function renderSettings() {
   if (!state) return;
   document.querySelectorAll(".plan-card").forEach(function (button) {
     button.classList.toggle("active", button.dataset.plan === state.settings.plan);
   });
   $("lockMinutesSelect").value = String(state.settings.lockMinutes);
+
+  const currentTab = document.querySelector("[data-settings-tab].active");
+  if (!currentTab) showSettingsCategory("plan");
 }
 
 async function selectPlan(plan) {
@@ -976,6 +997,9 @@ function bindEvents() {
 
     const plan = event.target.closest("[data-plan]");
     if (plan && state) selectPlan(plan.dataset.plan);
+
+    const settingsTab = event.target.closest("[data-settings-tab]");
+    if (settingsTab) showSettingsCategory(settingsTab.dataset.settingsTab);
 
     const journalPrompt = event.target.closest("[data-journal-prompt]");
     if (journalPrompt && state) {
