@@ -155,7 +155,7 @@ function vuneRenderPastCheckins(selectedDate){
   const selected = selectedDate && state.entries[selectedDate];
   let content = "";
   if(selected){
-    content = '<article class="card past-checkin-detail"><div class="past-checkin-detail-head"><div><span class="eyebrow">Saved Daily Check-in</span><h3>'+esc(prettyDate(selected.date,{weekday:"long",month:"long",day:"numeric",year:"numeric",timeZone:"UTC"}))+'</h3></div><button class="secondary-btn" type="button" data-past-checkin-list>← All check-ins</button></div><div class="past-checkin-fields">'+
+    content = '<article class="card past-checkin-detail"><div class="past-checkin-detail-head"><div><span class="eyebrow">Saved Daily Check-in</span><h3>'+esc(prettyDate(selected.date,{weekday:"long",month:"long",day:"numeric",year:"numeric",timeZone:"UTC"}))+'</h3></div><button class="secondary-btn" type="button" data-go="calendar">← Back to Calendar</button></div><div class="past-checkin-fields">'+
       '<div><small>Cycle</small><strong>'+(selected.period?'Period day '+(getPeriodDayNumber(selected.date)||""):'No period logged')+'</strong></div>'+
       '<div><small>Flow</small><strong>'+esc(selected.flow && selected.flow!=="none" ? selected.flow : "None logged")+'</strong></div>'+
       '<div><small>Mood</small><strong>'+esc(selected.mood || "None logged")+'</strong></div>'+
