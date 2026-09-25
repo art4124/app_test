@@ -17,92 +17,45 @@ jobs:
 
       - name: Check JavaScript syntax
         run: |
-          node --check app.js
-          node --check corrections.js
-          node --check batch-2026-09-25.js
-          node --check subscription-switch-fix.js
-          node --check surgical-fixes-2026-09-25.js
+          node --check vune-runtime.js
+          node --check public-theme.js
           node --check service-worker.js
+          node --check audit-check.mjs
 
-      - name: Check required files
+      - name: Run Vune static audit
+        run: node audit-check.mjs
+
+      - name: Check required production files
         run: |
           test -f index.html
-          test -f styles.css
-          test -f enhancements.css
-          test -f screenshot-fixes.css
-          test -f surgical-fixes-2026-09-25.css
-          test -f app.js
-          test -f surgical-fixes-2026-09-25.js
+          test -f vune.css
+          test -f vune-runtime.js
+          test -f public-theme.js
           test -f manifest.webmanifest
           test -f service-worker.js
           test -f privacy.html
+          test -f terms.html
           test -f SECURITY.md
+          test -f README.md
 
-      - name: Verify surgical fix load path
+      - name: Confirm legacy runtime fragments are retired
         run: |
-          grep -q "surgical-fixes-2026-09-25.js" service-worker.js
-          grep -q "surgical-fixes-2026-09-25.css" service-worker.js
-          grep -q "syncPlanBadge" surgical-fixes-2026-09-25.js
-          grep -q "relaxation" surgical-fixes-2026-09-25.js
-          grep -q 'data-settings-panel="privacy"' surgical-fixes-2026-09-25.css
-          grep -q "scrollbar-color" surgical-fixes-2026-09-25.css
-          grep -q "#activePlanBadge.plan-badge" surgical-fixes-2026-09-25.css
-          grep -q "current-plan-section" surgical-fixes-2026-09-25.css
-          grep -q "#returnMessage:empty" surgical-fixes-2026-09-25.css
-          grep -q "grid-template-columns:repeat(2,minmax(0,1fr))" surgical-fixes-2026-09-25.css
-
-      - name: Verify Garden retirement
-        run: |
-          ! grep -q 'id="view-garden"' index.html
-          ! grep -q 'data-view="garden"' index.html
-          ! grep -q 'data-go="garden"' index.html
-          ! grep -q 'Vune Garden' index.html
-          ! grep -q 'Cycle Garden' index.html
-          ! grep -q 'watering your plant' surgical-fixes-2026-09-25.js
-          grep -q 'Cycle Calendar' index.html
-          grep -q 'Future product ideas' README.md
-
-      - name: Verify saved check-in navigation
-        run: |
-          grep -q '← Back to Calendar' batch-2026-09-25.js
-          grep -q 'data-go="calendar"' batch-2026-09-25.js
-          ! grep -q '← All check-ins</button>' batch-2026-09-25.js
+          test ! -f app.js
+          test ! -f corrections.js
+          test ! -f batch-2026-09-25.js
+          test ! -f subscription-switch-fix.js
+          test ! -f surgical-fixes-2026-09-25.js
+          test ! -f calendar-expand.js
+          test ! -f styles.css
+          test ! -f enhancements.css
+          test ! -f corrections.css
+          test ! -f batch-2026-09-25.css
+          test ! -f screenshot-fixes.css
+          test ! -f surgical-fixes-2026-09-25.css
 
       - name: Verify privacy guardrails
         run: |
           grep -q "connect-src 'none'" index.html
-          grep -q "AES-GCM" app.js
-          grep -q "PBKDF2" app.js
-          ! grep -Eqi "googletagmanager|google-analytics|facebook\\.net|segment\\.com|mixpanel|amplitude" index.html app.js
-
-      - name: Verify monthly pricing
-        run: |
-          grep -q '\$4.99 / month' app.js
-          grep -q '\$12.99 / month' app.js
-          grep -q '\$24.99 / month' app.js
-          grep -q '\$32.99 / month' app.js
-          grep -q '/ month' index.html
-          ! grep -q '/ year' app.js
-          ! grep -q '/ year' index.html
-
-      - name: Verify theme coverage and check-in confirmation
-        run: |
-          grep -q 'journal-binding' surgical-fixes-2026-09-25.css
-          grep -q 'journal-pages .journal-entry:before' surgical-fixes-2026-09-25.css
-          grep -q 'checkin-save-confirmation' surgical-fixes-2026-09-25.css
-          grep -q '✓ Check-in saved successfully' surgical-fixes-2026-09-25.js
-          grep -q 'aria-live' surgical-fixes-2026-09-25.js
-
-      - name: Verify all ten accents persist
-        run: |
-          grep -q '"butter"' corrections.js
-          grep -q '"mauve"' corrections.js
-          grep -q 'VUNE_ALL_ACCENTS' batch-2026-09-25.js
-
-      - name: Verify Bloom Notes history routing
-        run: |
-          grep -q 'vuneRenderJournalEntries' surgical-fixes-2026-09-25.js
-          grep -q 'view-journal-entries' surgical-fixes-2026-09-25.js
-          grep -q 'data-view-all-journals' surgical-fixes-2026-09-25.js
-          grep -q 'entries\[0\]' surgical-fixes-2026-09-25.js
-          grep -q 'journal-history-page-list' surgical-fixes-2026-09-25.css
+          grep -q "AES-GCM" vune-runtime.js
+          grep -q "PBKDF2" vune-runtime.js
+          ! grep -Eqi "googletagmanager|google-analytics|facebook\\.net|segment\\.com|mixpanel|amplitude" index.html vune-runtime.js
