@@ -1,6 +1,6 @@
 "use strict";
 
-const CACHE = "vune-web-v19-direct-checkin-hotfix";
+const CACHE = "vune-web-v20-direct-checkin-hotfix";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -14,7 +14,8 @@ const APP_SHELL = [
   "./corrections.js",
   "./batch-2026-09-25.js",
   "./subscription-switch-fix.js",
-  "./surgical-fixes-2026-09-25.js",\n  "./checkin-hotfix.js",
+  "./surgical-fixes-2026-09-25.js",
+  "./checkin-hotfix.js",
   "./privacy.html",
   "./terms.html",
   "./manifest.webmanifest",
