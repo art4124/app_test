@@ -1,6 +1,6 @@
 "use strict";
 
-const CACHE = "vune-web-v10-subscription-switch-fix";
+const CACHE = "vune-web-v11-screenshot-fixes";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -8,6 +8,7 @@ const APP_SHELL = [
   "./enhancements.css",
   "./corrections.css",
   "./batch-2026-09-25.css",
+  "./screenshot-fixes.css",
   "./app.js",
   "./corrections.js",
   "./batch-2026-09-25.js",
@@ -76,7 +77,8 @@ self.addEventListener("fetch", function (event) {
     event.respondWith(Promise.all([
       textFromNetworkOrCache(new URL("./enhancements.css", self.registration.scope).href),
       textFromNetworkOrCache(new URL("./corrections.css", self.registration.scope).href),
-      textFromNetworkOrCache(new URL("./batch-2026-09-25.css", self.registration.scope).href)
+      textFromNetworkOrCache(new URL("./batch-2026-09-25.css", self.registration.scope).href),
+      textFromNetworkOrCache(new URL("./screenshot-fixes.css", self.registration.scope).href)
     ]).then(function (parts) {
       return new Response(parts.join("\n\n"), { headers: { "Content-Type": "text/css; charset=utf-8", "Cache-Control": "no-cache" } });
     }));
