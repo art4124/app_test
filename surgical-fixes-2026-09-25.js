@@ -154,6 +154,11 @@
     };
   }
 
+  /* Remove an accidental literal backslash-n text node left by an earlier patch. */
+  Array.from(document.body.childNodes).forEach(function(node){
+    if(node.nodeType === Node.TEXT_NODE && node.textContent.trim() === "\\n") node.remove();
+  });
+
   stableAppearance();
   syncPlanBadge();
 })();
