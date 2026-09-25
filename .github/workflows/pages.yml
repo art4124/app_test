@@ -2,8 +2,6 @@ name: Deploy Vune Web to Pages
 
 on:
   workflow_dispatch:
-  push:
-    branches: ["main"]
 
 permissions:
   contents: read
@@ -26,8 +24,6 @@ jobs:
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
-        with:
-          enablement: true
 
       - name: Upload static site
         uses: actions/upload-pages-artifact@v3
