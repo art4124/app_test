@@ -30,7 +30,7 @@ assert(runtime.includes('privacy-hidden'),"privacy curtain class must be toggled
 assert(runtime.includes("checkinHistory"),"multiple same-day check-ins must have dedicated history");
 assert(runtime.includes("vuneOpenHealthSummary"),"Supporter Health Summary handler must exist");
 assert(runtime.includes("vuneSecureDialog"),"sensitive passcode flows must use in-page password UI");
-assert(!/\\bprompt\\s*\\(/.test(runtime),"plaintext prompt() must not remain in active runtime source");
+assert(!/\bprompt\s*\(/.test(runtime),"plaintext prompt() must not remain in active runtime source");
 assert(runtime.includes("vuneDeleteEverything"),"permanent deletion path must exist");
 assert(runtime.includes("Advanced pattern details unlock with Complete"),"Complete-only detail gate must exist");
 assert(runtime.includes("vuneUnlockBlockedUntil"),"unlock retry throttling must exist");
