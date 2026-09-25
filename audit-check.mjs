@@ -22,6 +22,7 @@ assert(index.includes('src="vune-runtime.js"'),"index must load consolidated run
 assert(!index.includes('src="app.js"'),"index must not load legacy app.js");
 assert(!sw.includes("parts.join"),"service worker must not compose runtime files");
 assert(!sw.includes("corrections.js"),"service worker must not reference legacy patch files");
+assert(!sw.includes("event.waitUntil(caches.open"),"service worker should not use late waitUntil inside fetch response handling");
 
 assert(runtime.includes("vunePersistQueue"),"encrypted writes must be serialized");
 assert(runtime.includes('visibilitychange'),"privacy curtain/background lock listener must exist");
@@ -29,10 +30,13 @@ assert(runtime.includes('privacy-hidden'),"privacy curtain class must be toggled
 assert(runtime.includes("checkinHistory"),"multiple same-day check-ins must have dedicated history");
 assert(runtime.includes("vuneOpenHealthSummary"),"Supporter Health Summary handler must exist");
 assert(runtime.includes("vuneSecureDialog"),"sensitive passcode flows must use in-page password UI");
+assert(!/\\bprompt\\s*\\(/.test(runtime),"plaintext prompt() must not remain in active runtime source");
 assert(runtime.includes("vuneDeleteEverything"),"permanent deletion path must exist");
 assert(runtime.includes("Advanced pattern details unlock with Complete"),"Complete-only detail gate must exist");
 assert(runtime.includes("vuneUnlockBlockedUntil"),"unlock retry throttling must exist");
 assert(runtime.includes('window.addEventListener("storage"'),"multi-tab overwrite guard must exist");
+assert(runtime.includes("vuneCloseSensitiveOverlays"),"locking/backgrounding must close sensitive overlays");
+assert(runtime.includes("vunePersistGeneration"),"stale queued writes must be invalidated after cross-tab changes");
 
 assert(index.includes("Local encrypted vault"),"Free tier copy should match implemented features");
 assert(index.includes("Period prediction"),"Essential tier copy should match analytics entitlement");
