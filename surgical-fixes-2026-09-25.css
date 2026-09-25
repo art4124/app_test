@@ -1,0 +1,83 @@
+/* Surgical visual fixes only — keep current palette names/count, sizing, and layout. */
+
+/* Settings footer: centered, evenly spaced, and readable for every active accent. */
+.sidebar-footer{
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  gap:14px!important;
+}
+.sidebar-footer .privacy-pill,
+.sidebar-footer #lockNowBtn,
+.sidebar-footer .text-link{
+  width:100%!important;
+  max-width:190px!important;
+  text-align:center!important;
+  justify-content:center!important;
+}
+.sidebar-footer #lockNowBtn{
+  background:var(--vune-accent-soft)!important;
+  color:var(--vune-accent-ink)!important;
+  border-color:color-mix(in srgb,var(--vune-accent) 55%,transparent)!important;
+}
+.sidebar-footer #lockNowBtn:hover{
+  background:color-mix(in srgb,var(--vune-accent-soft) 75%,var(--vune-accent) 25%)!important;
+}
+.sidebar-footer .text-link{color:var(--vune-accent-ink)!important;}
+body.theme-dark .sidebar-footer #lockNowBtn{
+  background:var(--vune-accent-soft)!important;
+  color:var(--vune-accent-ink)!important;
+  border-color:var(--vune-accent)!important;
+}
+body.theme-dark .sidebar-footer .text-link{color:#f7f2f8!important;}
+
+/* Front-page plan badge follows the selected accent in every tier/mode. */
+#activePlanBadge.plan-badge{
+  background:var(--vune-accent-soft)!important;
+  color:var(--vune-accent-ink)!important;
+  border:1px solid color-mix(in srgb,var(--vune-accent) 48%,transparent)!important;
+}
+body.theme-dark #activePlanBadge.plan-badge{
+  background:var(--vune-accent-soft)!important;
+  color:var(--vune-accent-ink)!important;
+  border-color:var(--vune-accent)!important;
+}
+
+/* Keep themed inner layers inside their existing rounded boundaries. */
+.card,
+.settings-panel,
+.settings-mini-card,
+.current-plan-section,
+.plan-card,
+.subscription-option,
+.welcome-hero,
+.checkin-card,
+.journal-entry,
+.companion-panel,
+.lock-card,
+.warm-lock-card,
+.calendar-expanded-day{
+  overflow:hidden;
+}
+
+/* Accent application should coordinate major surfaces without changing palette definitions. */
+body:not(.theme-dark)[class*="accent-"] .primary-btn,
+body:not(.theme-dark)[class*="accent-"] .secondary-btn,
+body:not(.theme-dark)[class*="accent-"] .privacy-pill,
+body:not(.theme-dark)[class*="accent-"] .plan-badge,
+body:not(.theme-dark)[class*="accent-"] .card-icon{
+  border-color:color-mix(in srgb,var(--vune-accent) 42%,#fff)!important;
+}
+body:not(.theme-dark)[class*="accent-"] .secondary-btn,
+body:not(.theme-dark)[class*="accent-"] .privacy-pill,
+body:not(.theme-dark)[class*="accent-"] .card-icon{
+  background:var(--vune-accent-soft)!important;
+  color:var(--vune-accent-ink)!important;
+}
+body.theme-dark[class*="accent-"] .secondary-btn,
+body.theme-dark[class*="accent-"] .privacy-pill,
+body.theme-dark[class*="accent-"] .card-icon{
+  background:var(--vune-accent-soft)!important;
+  color:var(--vune-accent-ink)!important;
+  border-color:var(--vune-accent)!important;
+}
