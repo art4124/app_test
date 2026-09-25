@@ -1,0 +1,36 @@
+name: Validate Vune Web
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check JavaScript syntax
+        run: node --check app.js
+
+      - name: Check required files
+        run: |
+          test -f index.html
+          test -f styles.css
+          test -f app.js
+          test -f manifest.webmanifest
+          test -f service-worker.js
+          test -f privacy.html
+          test -f SECURITY.md
+
+      - name: Verify privacy guardrails
+        run: |
+          grep -q "connect-src 'none'" index.html
+          grep -q "AES-GCM" app.js
+          grep -q "PBKDF2" app.js
+          ! grep -Eqi "googletagmanager|google-analytics|facebook\\.net|segment\\.com|mixpanel|amplitude" index.html app.js
