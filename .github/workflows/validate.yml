@@ -58,3 +58,13 @@ jobs:
           grep -q "AES-GCM" app.js
           grep -q "PBKDF2" app.js
           ! grep -Eqi "googletagmanager|google-analytics|facebook\\.net|segment\\.com|mixpanel|amplitude" index.html app.js
+
+      - name: Verify monthly pricing
+        run: |
+          grep -q '\$4.99 / month' app.js
+          grep -q '\$12.99 / month' app.js
+          grep -q '\$24.99 / month' app.js
+          grep -q '\$32.99 / month' app.js
+          grep -q '/ month' index.html
+          ! grep -q '/ year' app.js
+          ! grep -q '/ year' index.html
