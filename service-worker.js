@@ -1,6 +1,6 @@
 "use strict";
 
-const CACHE = "vune-web-v2-warm-ui";
+const CACHE = "vune-web-v3-interactions";
 const APP_SHELL = [
   "./",
   "./index.html",
