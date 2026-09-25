@@ -16,17 +16,34 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Check JavaScript syntax
-        run: node --check app.js
+        run: |
+          node --check app.js
+          node --check corrections.js
+          node --check batch-2026-09-25.js
+          node --check subscription-switch-fix.js
+          node --check surgical-fixes-2026-09-25.js
+          node --check service-worker.js
 
       - name: Check required files
         run: |
           test -f index.html
           test -f styles.css
+          test -f enhancements.css
+          test -f screenshot-fixes.css
+          test -f surgical-fixes-2026-09-25.css
           test -f app.js
+          test -f surgical-fixes-2026-09-25.js
           test -f manifest.webmanifest
           test -f service-worker.js
           test -f privacy.html
           test -f SECURITY.md
+
+      - name: Verify surgical fix load path
+        run: |
+          grep -q "surgical-fixes-2026-09-25.js" service-worker.js
+          grep -q "surgical-fixes-2026-09-25.css" service-worker.js
+          grep -q 'showView("garden")' surgical-fixes-2026-09-25.js
+          grep -q "#activePlanBadge.plan-badge" surgical-fixes-2026-09-25.css
 
       - name: Verify privacy guardrails
         run: |
