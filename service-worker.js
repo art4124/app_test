@@ -1,6 +1,6 @@
 "use strict";
 
-const CACHE = "vune-web-v16-checkin-calendar-back";
+const CACHE = "vune-web-v17-checkin-watering";
 const APP_SHELL = [
   "./",
   "./index.html",
