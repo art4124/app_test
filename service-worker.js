@@ -1,14 +1,16 @@
 "use strict";
 
-const CACHE = "vune-web-v8-correction-batch";
+const CACHE = "vune-web-v9-sept25-beta-batch";
 const APP_SHELL = [
   "./",
   "./index.html",
   "./styles.css",
   "./enhancements.css",
   "./corrections.css",
+  "./batch-2026-09-25.css",
   "./app.js",
   "./corrections.js",
+  "./batch-2026-09-25.js",
   "./privacy.html",
   "./terms.html",
   "./manifest.webmanifest",
@@ -60,7 +62,8 @@ self.addEventListener("fetch", function (event) {
   if (url.origin === self.location.origin && url.pathname.endsWith("/app.js")) {
     event.respondWith(Promise.all([
       textFromNetworkOrCache(new URL("./app.js", self.registration.scope).href),
-      textFromNetworkOrCache(new URL("./corrections.js", self.registration.scope).href)
+      textFromNetworkOrCache(new URL("./corrections.js", self.registration.scope).href),
+      textFromNetworkOrCache(new URL("./batch-2026-09-25.js", self.registration.scope).href)
     ]).then(function (parts) {
       return new Response(parts.join("\n\n"), { headers: { "Content-Type": "application/javascript; charset=utf-8", "Cache-Control": "no-cache" } });
     }));
@@ -70,7 +73,8 @@ self.addEventListener("fetch", function (event) {
   if (url.origin === self.location.origin && url.pathname.endsWith("/enhancements.css")) {
     event.respondWith(Promise.all([
       textFromNetworkOrCache(new URL("./enhancements.css", self.registration.scope).href),
-      textFromNetworkOrCache(new URL("./corrections.css", self.registration.scope).href)
+      textFromNetworkOrCache(new URL("./corrections.css", self.registration.scope).href),
+      textFromNetworkOrCache(new URL("./batch-2026-09-25.css", self.registration.scope).href)
     ]).then(function (parts) {
       return new Response(parts.join("\n\n"), { headers: { "Content-Type": "text/css; charset=utf-8", "Cache-Control": "no-cache" } });
     }));
