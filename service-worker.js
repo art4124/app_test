@@ -1,6 +1,6 @@
 "use strict";
 
-const CACHE = "vune-web-v11-screenshot-fixes";
+const CACHE = "vune-web-v12-surgical-fixes";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -9,10 +9,12 @@ const APP_SHELL = [
   "./corrections.css",
   "./batch-2026-09-25.css",
   "./screenshot-fixes.css",
+  "./surgical-fixes-2026-09-25.css",
   "./app.js",
   "./corrections.js",
   "./batch-2026-09-25.js",
   "./subscription-switch-fix.js",
+  "./surgical-fixes-2026-09-25.js",
   "./privacy.html",
   "./terms.html",
   "./manifest.webmanifest",
@@ -66,7 +68,8 @@ self.addEventListener("fetch", function (event) {
       textFromNetworkOrCache(new URL("./app.js", self.registration.scope).href),
       textFromNetworkOrCache(new URL("./corrections.js", self.registration.scope).href),
       textFromNetworkOrCache(new URL("./batch-2026-09-25.js", self.registration.scope).href),
-      textFromNetworkOrCache(new URL("./subscription-switch-fix.js", self.registration.scope).href)
+      textFromNetworkOrCache(new URL("./subscription-switch-fix.js", self.registration.scope).href),
+      textFromNetworkOrCache(new URL("./surgical-fixes-2026-09-25.js", self.registration.scope).href)
     ]).then(function (parts) {
       return new Response(parts.join("\n\n"), { headers: { "Content-Type": "application/javascript; charset=utf-8", "Cache-Control": "no-cache" } });
     }));
@@ -78,7 +81,8 @@ self.addEventListener("fetch", function (event) {
       textFromNetworkOrCache(new URL("./enhancements.css", self.registration.scope).href),
       textFromNetworkOrCache(new URL("./corrections.css", self.registration.scope).href),
       textFromNetworkOrCache(new URL("./batch-2026-09-25.css", self.registration.scope).href),
-      textFromNetworkOrCache(new URL("./screenshot-fixes.css", self.registration.scope).href)
+      textFromNetworkOrCache(new URL("./screenshot-fixes.css", self.registration.scope).href),
+      textFromNetworkOrCache(new URL("./surgical-fixes-2026-09-25.css", self.registration.scope).href)
     ]).then(function (parts) {
       return new Response(parts.join("\n\n"), { headers: { "Content-Type": "text/css; charset=utf-8", "Cache-Control": "no-cache" } });
     }));
