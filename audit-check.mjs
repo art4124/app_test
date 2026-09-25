@@ -16,6 +16,9 @@ const privacy=read("privacy.html");
 const terms=read("terms.html");
 const manifest=JSON.parse(read("manifest.webmanifest"));
 const readme=read("README.md");
+const ids=[...index.matchAll(/\\bid="([^"]+)"/g)].map(match=>match[1]);
+const duplicateIds=ids.filter((id,pos)=>ids.indexOf(id)!==pos);
+assert(duplicateIds.length===0,"HTML ids must be unique");
 
 assert(index.includes('href="vune.css"'),"index must load consolidated stylesheet");
 assert(index.includes('src="vune-runtime.js"'),"index must load consolidated runtime");
@@ -25,6 +28,8 @@ assert(!sw.includes("corrections.js"),"service worker must not reference legacy 
 assert(!sw.includes("event.waitUntil(caches.open"),"service worker should not use late waitUntil inside fetch response handling");
 
 assert(runtime.includes("vunePersistQueue"),"encrypted writes must be serialized");
+const barePersist = runtime.split("\\n").filter(line => /persistState\\(\\);/.test(line) && !/await persistState\\(\\);|persistState\\(\\)\\.then|persistState\\(\\)\\.catch/.test(line));
+assert(barePersist.length===0,"fire-and-forget encrypted saves must handle rejection");
 assert(runtime.includes('visibilitychange'),"privacy curtain/background lock listener must exist");
 assert(runtime.includes('privacy-hidden'),"privacy curtain class must be toggled");
 assert(runtime.includes("checkinHistory"),"multiple same-day check-ins must have dedicated history");
@@ -37,6 +42,7 @@ assert(runtime.includes("vuneUnlockBlockedUntil"),"unlock retry throttling must 
 assert(runtime.includes('window.addEventListener("storage"'),"multi-tab overwrite guard must exist");
 assert(runtime.includes("vuneCloseSensitiveOverlays"),"locking/backgrounding must close sensitive overlays");
 assert(runtime.includes("vunePersistGeneration"),"stale queued writes must be invalidated after cross-tab changes");
+assert(runtime.includes("const cleanEntries = {}"),"restored entries must be sanitized before use");
 
 assert(index.includes("Local encrypted vault"),"Free tier copy should match implemented features");
 assert(index.includes("Period prediction"),"Essential tier copy should match analytics entitlement");
