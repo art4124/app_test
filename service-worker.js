@@ -1,6 +1,6 @@
 "use strict";
 
-const CACHE = "vune-web-v23-layout-cleanup";
+const CACHE = "vune-web-v24-theme-and-checkin-confirmation";
 const APP_SHELL = [
   "./",
   "./index.html",
