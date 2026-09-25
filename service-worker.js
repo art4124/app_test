@@ -1,12 +1,14 @@
 "use strict";
 
-const CACHE = "vune-web-v6-cycle-garden";
+const CACHE = "vune-web-v7-consolidated-ui";
 const APP_SHELL = [
   "./",
   "./index.html",
   "./styles.css",
+  "./enhancements.css",
   "./app.js",
   "./privacy.html",
+  "./terms.html",
   "./manifest.webmanifest",
   "./icon.svg"
 ];
@@ -38,8 +40,12 @@ self.addEventListener("activate", function (event) {
 self.addEventListener("fetch", function (event) {
   if (event.request.method !== "GET") return;
   event.respondWith(
-    caches.match(event.request).then(function (cached) {
-      return cached || fetch(event.request);
+    fetch(event.request).then(function (response) {
+      const copy = response.clone();
+      caches.open(CACHE).then(function (cache) { cache.put(event.request, copy); });
+      return response;
+    }).catch(function () {
+      return caches.match(event.request);
     })
   );
 });
