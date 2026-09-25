@@ -1834,6 +1834,9 @@ ensureRecoveryModal = function(){
       if(input) input.value = "";
     }
 
+    const terms = safe("termsGate");
+    if(terms) terms.hidden = true;
+
     if(safe("companionPanel")) setCompanionOpen(false);
   }
 
