@@ -79,7 +79,6 @@
       <nav class="side-nav" aria-label="Primary">
         <button class="nav-btn active" data-view="today"><span>☀</span>Today in Vune</button>
         <button class="nav-btn" data-view="calendar"><span>◔</span>My Cycle</button>
-        <button class="nav-btn" data-view="garden"><span>✿</span>My Garden</button>
         <button class="nav-btn" data-view="journal"><span>♡</span>Bloom Notes</button>
         <button class="nav-btn" data-view="insights"><span>〰</span>Patterns</button>
         <button class="nav-btn" data-view="settings"><span>⚙</span>Privacy & Comfort</button>
@@ -125,16 +124,6 @@
             </div>
           </article>
 
-          <article class="card garden-mini-card soft-card">
-            <div class="card-heading">
-              <span class="card-icon">🌱</span>
-              <span>My garden</span>
-            </div>
-            <div id="miniPlant" class="mini-plant" aria-hidden="true">🌱</div>
-            <strong id="gardenMiniStatus">Ready for care</strong>
-            <p id="gardenMiniDetail" class="muted">0 care days</p>
-            <button class="text-btn" type="button" data-go="garden">Open garden →</button>
-          </article>
         </div>
 
         <article class="card checkin-card journey-card">
@@ -227,9 +216,9 @@
                   <span class="sr-only">Daily reflection</span>
                   <textarea id="dailyReflection" rows="4" maxlength="4000" placeholder="Anything you want future-you to remember about today..."></textarea>
                 </label>
-                <p id="checkinRequirement" class="entry-requirement" role="alert" hidden>Choose at least one feeling, symptom, flow/period option, or write a note so your plant has something to grow from. 🌱</p>
+                <p id="checkinRequirement" class="entry-requirement" role="alert" hidden>Choose at least one feeling, symptom, flow/period option, or write a note before saving your check-in.</p>
                 <div class="form-actions">
-                  <button class="primary-btn delight-btn" type="submit">Finish today’s check-in 💧</button>
+                  <button class="primary-btn delight-btn" type="submit">Finish today’s check-in</button>
                   <span id="saveCheckinStatus" class="muted"></span>
                 </div>
               </div>
@@ -242,19 +231,16 @@
         <div class="page-heading calendar-page-heading">
           <div>
             <span class="eyebrow">My Cycle</span>
-            <h2>Cycle Garden</h2>
-            <p class="muted">Each day becomes a small part of your growing cycle story.</p>
+            <h2>Cycle Calendar</h2>
+            <p class="muted">See your cycle history, saved check-ins, and forecasts in one place.</p>
           </div>
         </div>
 
         <article class="card garden-calendar-card">
-          <div class="calendar-foliage foliage-left" aria-hidden="true"><span>❧</span><span>❧</span></div>
-          <div class="calendar-foliage foliage-right" aria-hidden="true"><span>❧</span><span>❧</span></div>
 
           <div class="calendar-toolbar garden-calendar-toolbar">
             <button id="prevMonth" class="icon-btn leaf-nav" type="button" aria-label="Previous month">←</button>
             <div class="calendar-month-title">
-              <span class="tiny-sprout" aria-hidden="true">🌿</span>
               <h3 id="calendarMonthLabel"></h3>
             </div>
             <button id="nextMonth" class="icon-btn leaf-nav" type="button" aria-label="Next month">→</button>
@@ -266,58 +252,10 @@
           <div id="calendarGrid" class="calendar-grid garden-calendar-grid"></div>
 
           <div class="calendar-legend garden-legend">
-            <span><i class="garden-key flower-key">✿</i>Period</span>
+            <span><i class="garden-key flower-key">●</i>Period</span>
             <span><i class="garden-key sprout-key">●</i>Check-in</span>
             <span><i class="garden-key bud-key">○</i>Forecast</span>
           </div>
-        </article>
-      </section>
-
-      <section class="view" id="view-garden">
-        <div class="page-heading">
-          <div><span class="eyebrow">A little care goes a long way</span><h2>My Garden 🌿</h2><p class="muted">Your garden grows with care, not perfection. Missed days never erase what you’ve grown.</p></div>
-        </div>
-
-        <div class="garden-layout">
-          <article class="card garden-stage-card">
-            <div id="gardenScene" class="garden-scene" aria-label="Your current Vune plant">
-              <div id="growthMoment" class="growth-moment" aria-hidden="true" hidden>
-                <span class="growth-drop">💧</span>
-                <span class="growth-ring ring-one"></span>
-                <span class="growth-ring ring-two"></span>
-                <span class="growth-sparkle sparkle-one">✦</span>
-                <span class="growth-sparkle sparkle-two">✦</span>
-              </div>
-              <div class="garden-sky"><span class="sun-orb"></span><span class="garden-sparkle one">✦</span><span class="garden-sparkle two">✦</span></div>
-              <div class="garden-ground"></div>
-              <div id="plantArt" class="plant-art stage-0">
-                <span class="stem"></span>
-                <span class="leaf leaf-left"></span>
-                <span class="leaf leaf-right"></span>
-                <span class="bud"></span>
-                <span class="flower flower-one">✿</span>
-                <span class="flower flower-two">✿</span>
-              </div>
-            </div>
-            <div class="garden-stage-copy">
-              <span class="eyebrow">Your plant today</span>
-              <h3 id="plantStageName">Seed</h3>
-              <p id="plantStageMessage" class="muted">Your garden is ready for its first moment of care.</p>
-              <div class="progress-track"><span id="gardenProgressBar"></span></div>
-              <small id="gardenProgressText"></small>
-            </div>
-          </article>
-
-          <div class="garden-stats">
-            <article class="card stat-card"><span>💧</span><strong id="wateringsCount">0</strong><small>Care days</small></article>
-            <article class="card stat-card"><span>🌸</span><strong id="bloomsCount">0</strong><small>Memory Blooms</small></article>
-            <article class="card stat-card"><span>🌿</span><strong id="gardenAge">0</strong><small>Days in bloom</small></article>
-          </div>
-        </div>
-
-        <article class="card memory-card soft-card">
-          <div class="section-title-row"><div><span class="eyebrow">Moments worth keeping</span><h3>Memory Blooms</h3><p class="muted">Little milestones that stay in your garden permanently.</p></div></div>
-          <div id="memoryBlooms" class="memory-blooms"></div>
         </article>
       </section>
 
@@ -378,7 +316,7 @@
           <article class="card stat-card large soft-card"><small>Usual cycle</small><strong id="avgCycleStat">—</strong><span>days on average</span></article>
           <article class="card stat-card large soft-card"><small>Your range</small><strong id="cycleRangeStat">—</strong><span>days</span></article>
           <article class="card stat-card large soft-card"><small>Cycles remembered</small><strong id="trackedCyclesStat">0</strong><span>starts</span></article>
-          <article class="card stat-card large soft-card"><small>Care days</small><strong id="checkinsStat">0</strong><span>check-ins</span></article>
+          <article class="card stat-card large soft-card"><small>Check-in days</small><strong id="checkinsStat">0</strong><span>days logged</span></article>
         </div>
 
         <div class="insights-grid">
@@ -433,7 +371,7 @@
               <div class="plan-grid subscription-list" id="planGrid">
                 <button class="plan-card subscription-option" data-plan="free">
                   <span class="subscription-top"><strong>Free</strong><span class="subscription-price">$0</span></span>
-                  <span class="subscription-features"><span>✓ Cycle tracking</span><span>✓ Daily check-ins</span><span>✓ Vune Garden</span><span>✓ Basic forecast</span></span>
+                  <span class="subscription-features"><span>✓ Cycle tracking</span><span>✓ Daily check-ins</span><span>✓ Calendar history</span><span>✓ Basic forecast</span></span>
                 </button>
 
                 <button class="plan-card subscription-option" data-plan="essential">
@@ -523,7 +461,6 @@
     <nav class="mobile-nav" aria-label="Mobile primary">
       <button class="nav-btn active" data-view="today"><span>☀</span><small>Today</small></button>
       <button class="nav-btn" data-view="calendar"><span>◔</span><small>Cycle</small></button>
-      <button class="nav-btn" data-view="garden"><span>✿</span><small>Garden</small></button>
       <button class="nav-btn" data-view="journal"><span>♡</span><small>Notes</small></button>
       <button class="nav-btn" data-view="settings"><span>⚙</span><small>More</small></button>
     </nav>
@@ -586,6 +523,5 @@
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
-  <script src="app.js" defer></script>\n  <script src="checkin-hotfix.js" defer></script>
-</body>
+  <script src="app.js" defer></script>\n</body>
 </html>
