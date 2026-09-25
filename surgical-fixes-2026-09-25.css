@@ -1,4 +1,4 @@
-/* Surgical visual fixes only — keep current palette names/count, sizing, and layout. */
+/* Surgical visual fixes only — keep current palette names/count, sizing, and feature structure. */
 
 /* Settings footer: centered, evenly spaced, and readable for every active accent. */
 .sidebar-footer{
@@ -31,7 +31,7 @@ body.theme-dark .sidebar-footer #lockNowBtn{
 }
 body.theme-dark .sidebar-footer .text-link{color:#f7f2f8!important;}
 
-/* Front-page plan badge follows the selected accent in every tier/mode. */
+/* Front-page plan badge follows both current plan state and selected accent. */
 #activePlanBadge.plan-badge{
   background:var(--vune-accent-soft)!important;
   color:var(--vune-accent-ink)!important;
@@ -45,7 +45,6 @@ body.theme-dark #activePlanBadge.plan-badge{
 
 /* Keep themed inner layers inside their existing rounded boundaries. */
 .card,
-.settings-panel,
 .settings-mini-card,
 .current-plan-section,
 .plan-card,
@@ -58,6 +57,132 @@ body.theme-dark #activePlanBadge.plan-badge{
 .warm-lock-card,
 .calendar-expanded-day{
   overflow:hidden;
+}
+
+/* Privacy panel: preserve rounded settings shell, then use distinct readable rows. */
+.settings-panels{
+  overflow:hidden;
+}
+.settings-panel[data-settings-panel="privacy"]{
+  border-radius:inherit;
+  background:transparent!important;
+}
+.settings-panel[data-settings-panel="privacy"] .privacy-promise{
+  gap:10px!important;
+  margin:14px 0 16px!important;
+}
+.settings-panel[data-settings-panel="privacy"] .privacy-promise>div{
+  display:grid;
+  gap:3px;
+  padding:13px 14px;
+  border-radius:14px;
+  background:color-mix(in srgb,var(--vune-accent-soft) 72%,#fff 28%);
+  border:1px solid color-mix(in srgb,var(--vune-accent) 24%,transparent);
+  overflow:hidden;
+}
+.settings-panel[data-settings-panel="privacy"] .privacy-promise strong{
+  color:var(--ink);
+  line-height:1.25;
+}
+.settings-panel[data-settings-panel="privacy"] .privacy-promise span{
+  color:var(--muted);
+  line-height:1.45;
+}
+.settings-panel[data-settings-panel="privacy"] .legal-link-row{
+  gap:18px;
+  margin-top:14px;
+}
+.settings-panel[data-settings-panel="privacy"] .legal-link-row .text-link{
+  color:var(--vune-accent-ink)!important;
+}
+body.theme-dark .settings-panels{
+  background:var(--vune-dark-surface)!important;
+  border-color:#4b4352!important;
+}
+body.theme-dark .settings-panel[data-settings-panel="privacy"]{
+  background:transparent!important;
+}
+body.theme-dark .settings-panel[data-settings-panel="privacy"] .privacy-promise>div{
+  background:var(--vune-accent-soft)!important;
+  border-color:color-mix(in srgb,var(--vune-accent) 42%,#51485a)!important;
+}
+body.theme-dark .settings-panel[data-settings-panel="privacy"] .privacy-promise strong{
+  color:#fff!important;
+}
+body.theme-dark .settings-panel[data-settings-panel="privacy"] .privacy-promise span{
+  color:var(--vune-dark-muted)!important;
+}
+body.theme-dark .settings-panel[data-settings-panel="privacy"] .legal-link-row .text-link{
+  color:var(--vune-accent)!important;
+}
+
+/* Companion: keep the whole panel inside the viewport and reserve scrolling for messages. */
+.companion-panel{
+  display:flex;
+  flex-direction:column;
+  height:min(650px,calc(100dvh - 110px));
+  max-height:calc(100dvh - 110px)!important;
+}
+.companion-panel-header{flex:0 0 auto;}
+.companion-experience{
+  flex:1 1 auto;
+  min-height:0;
+  display:flex!important;
+  flex-direction:column;
+  overflow:hidden;
+}
+.companion-messages{
+  flex:1 1 auto;
+  min-height:150px!important;
+  max-height:none!important;
+  overflow-y:auto!important;
+  overscroll-behavior:contain;
+  scrollbar-width:thin;
+  scrollbar-color:var(--vune-accent) transparent;
+}
+.companion-messages::-webkit-scrollbar{width:8px}
+.companion-messages::-webkit-scrollbar-track{background:transparent}
+.companion-messages::-webkit-scrollbar-thumb{
+  background:color-mix(in srgb,var(--vune-accent) 72%,transparent);
+  border-radius:999px;
+  border:2px solid transparent;
+  background-clip:padding-box;
+}
+.companion-messages::-webkit-scrollbar-thumb:hover{
+  background:var(--vune-accent);
+  background-clip:padding-box;
+}
+.companion-prompts{
+  flex:0 0 auto;
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:7px!important;
+}
+.companion-prompts button{
+  width:100%;
+  min-width:0;
+  white-space:normal;
+  text-align:center;
+}
+.companion-prompts button:last-child{grid-column:1/-1;}
+.companion-input,
+.companion-footer{flex:0 0 auto;}
+.companion-input textarea{resize:none;}
+body.theme-dark[class*="accent-"] .companion-panel-header{
+  background:color-mix(in srgb,var(--vune-dark-surface-2) 82%,var(--vune-accent) 18%)!important;
+}
+body.theme-dark[class*="accent-"] .companion-input .primary-btn{
+  background:var(--vune-accent)!important;
+  color:#17131d!important;
+}
+
+@media(max-width:760px){
+  .companion-panel{
+    height:min(620px,calc(100dvh - 150px));
+    max-height:calc(100dvh - 150px)!important;
+  }
+  .companion-prompts{grid-template-columns:1fr!important;}
+  .companion-prompts button:last-child{grid-column:auto;}
 }
 
 /* Accent application should coordinate major surfaces without changing palette definitions. */
