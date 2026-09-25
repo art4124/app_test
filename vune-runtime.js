@@ -1804,3 +1804,63 @@ ensureRecoveryModal = function(){
     if(modal && !modal.hidden && input) input.focus();
   },0);
 };
+
+
+/* =========================================================
+   VUNE AUDIT COMPLETION — sensitive overlays + form state
+   ========================================================= */
+(function(){
+  "use strict";
+
+  function vuneCloseSensitiveOverlays(){
+    document.querySelectorAll(".vune-secure-dialog").forEach(function(dialog){
+      const cancel = dialog.querySelector("[data-secure-cancel]");
+      if(cancel) cancel.click();
+      else{
+        try{ dialog.close(); }catch(error){}
+        dialog.remove();
+      }
+    });
+
+    const report = safe("reportDialog");
+    if(report && report.open){
+      try{ report.close(); }catch(error){ report.removeAttribute("open"); }
+    }
+
+    const recovery = safe("recoveryModal");
+    if(recovery){
+      recovery.hidden = true;
+      const input = safe("recoveryInput");
+      if(input) input.value = "";
+    }
+
+    if(safe("companionPanel")) setCompanionOpen(false);
+  }
+
+  const vuneAuditLockAppBase = lockApp;
+  lockApp = async function(){
+    vuneCloseSensitiveOverlays();
+    return vuneAuditLockAppBase();
+  };
+
+  document.addEventListener("visibilitychange",function(){
+    if(document.hidden) vuneCloseSensitiveOverlays();
+  },true);
+
+  const vuneAuditLoadCheckinBase = loadCheckinForDate;
+  loadCheckinForDate = function(date){
+    const status = safe("saveCheckinStatus");
+    if(status) status.classList.remove("checkin-save-confirmation");
+    const result = vuneAuditLoadCheckinBase(date);
+    if(status && !status.textContent.trim()) status.removeAttribute("role");
+    return result;
+  };
+
+  const vuneAuditShowAppBase = showApp;
+  showApp = function(){
+    const result = vuneAuditShowAppBase();
+    const dateField = safe("checkinDate");
+    if(state && dateField) loadCheckinForDate(dateField.value || todayISO());
+    return result;
+  };
+})();
