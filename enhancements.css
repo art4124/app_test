@@ -22,3 +22,21 @@ body.theme-dark .calendar-tag.checkin{color:#a9d9b7}body.theme-dark .calendar-ta
 .plan-card .new-unlock{display:block;margin-top:8px;font-weight:800;color:#6f4f89}.plan-card[data-plan="essential"] .new-unlock:before{content:"Unlocks analytics"}.plan-card[data-plan="plus"] .new-unlock:before{content:"Adds Bloom Notes"}.plan-card[data-plan="complete"] .new-unlock:before{content:"Adds Pattern Garden"}.plan-card[data-plan="supporter"] .new-unlock:before{content:"Adds Luma Companion"}
 @media(max-width:720px){.appearance-options{grid-template-columns:1fr}.calendar-day.has-detail{min-height:78px}.calendar-tag{font-size:.58rem;padding:2px 4px}.day-detail-sheet{padding:0}.day-detail-card{border-radius:22px 22px 0 0}.terms-card{padding:20px}}
 @media(prefers-reduced-motion:reduce){.plant-art,.plant-art .leaf,.plant-art.is-growing,.plant-art.is-growing .leaf{animation:none!important}}
+
+/* Settings contrast correction */
+.settings-tab:hover small,.settings-tab:focus-visible small,.settings-tab.active small{color:#5f5368!important}
+.settings-tab:hover strong,.settings-tab:focus-visible strong{color:#33283a!important}
+.subscription-option,.subscription-option strong,.subscription-option .subscription-top strong{color:#33283a!important}
+.subscription-option .subscription-features{color:#5f5368!important}
+.current-plan-card,.current-plan-main strong{color:#33283a!important}
+.current-plan-main small{color:#65596d!important}
+body.theme-dark .settings-tab{color:#d9d1dd!important}
+body.theme-dark .settings-tab small{color:#c7bdcc!important}
+body.theme-dark .settings-tab:hover,body.theme-dark .settings-tab:focus-visible,body.theme-dark .settings-tab.active{color:#ffffff!important;background:#342e3c!important;border-color:#554b61!important}
+body.theme-dark .settings-tab:hover small,body.theme-dark .settings-tab:focus-visible small,body.theme-dark .settings-tab.active small{color:#e1d9e5!important}
+body.theme-dark .settings-tab:hover strong,body.theme-dark .settings-tab:focus-visible strong,body.theme-dark .settings-tab.active strong{color:#ffffff!important}
+body.theme-dark .subscription-option,body.theme-dark .subscription-option strong,body.theme-dark .subscription-option .subscription-top strong,body.theme-dark .current-plan-card,body.theme-dark .current-plan-main strong{color:#f7f2f8!important}
+body.theme-dark .subscription-option .subscription-features,body.theme-dark .current-plan-main small{color:#d0c6d5!important}
+body.theme-dark .subscription-price,body.theme-dark .current-plan-price{color:#d8b9f2!important}
+body.theme-dark .plan-card .new-unlock{color:#d8b9f2!important}
+body.theme-dark .appearance-option{background:var(--vune-dark-surface-2)!important;color:var(--vune-dark-text)!important;border-color:#51485a!important}
