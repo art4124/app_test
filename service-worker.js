@@ -38,10 +38,13 @@ self.addEventListener("fetch", function(event){
 
   event.respondWith(
     fetch(event.request,{cache:"no-store"})
-      .then(function(response){
+      .then(async function(response){
         if(response && response.ok){
           const copy = response.clone();
-          event.waitUntil(caches.open(CACHE).then(function(cache){ return cache.put(event.request,copy); }));
+          try{
+            const cache = await caches.open(CACHE);
+            await cache.put(event.request,copy);
+          }catch(error){}
         }
         return response;
       })
