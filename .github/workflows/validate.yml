@@ -48,6 +48,9 @@ jobs:
           grep -q 'data-settings-panel="privacy"' surgical-fixes-2026-09-25.css
           grep -q "scrollbar-color" surgical-fixes-2026-09-25.css
           grep -q "#activePlanBadge.plan-badge" surgical-fixes-2026-09-25.css
+          grep -q "current-plan-section" surgical-fixes-2026-09-25.css
+          grep -q "#returnMessage:empty" surgical-fixes-2026-09-25.css
+          grep -q "grid-template-columns:repeat(2,minmax(0,1fr))" surgical-fixes-2026-09-25.css
 
       - name: Verify privacy guardrails
         run: |
