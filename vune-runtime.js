@@ -52,8 +52,63 @@ function defaultState(){ return {version:2,createdAt:new Date().toISOString(),se
 function normalizeState(v){ const b=defaultState(); const n=Object.assign({},b,v||{}); n.settings=Object.assign({},b.settings,n.settings||{}); if(!n.settings.recoveryKey)n.settings.recoveryKey=randomRecoveryKey(); n.entries=n.entries||{}; n.journals=Array.isArray(n.journals)?n.journals:[]; n.assistantMessages=Array.isArray(n.assistantMessages)?n.assistantMessages:[]; n.ui=Object.assign({},b.ui,n.ui||{}); return n; }
 function hasVault(){ return Boolean(localStorage.getItem(DATA_KEY)&&localStorage.getItem(SALT_KEY)); }
 
-async function persistState(){ if(!state||!currentKey)return; localStorage.setItem(DATA_KEY,await encryptJson(state,currentKey)); await persistRecoveryBackup(); }
-async function persistRecoveryBackup(){ if(!state||!state.settings.recoveryKey)return; const salt=crypto.getRandomValues(new Uint8Array(16)); const key=await deriveKey(state.settings.recoveryKey, salt); const copy=JSON.parse(JSON.stringify(state)); const payload=await encryptJson(copy,key); localStorage.setItem(RECOVERY_BACKUP_KEY,JSON.stringify({format:"vune-recovery-backup",version:1,salt:toBase64(salt),payload,updatedAt:new Date().toISOString()})); state.settings.lastBackupAt=new Date().toISOString(); }
+  /* ---------- Serialized encrypted writes ---------- */
+  let vunePersistQueue = Promise.resolve();
+  let vunePersistGeneration = 0;
+  let vuneRecoveryKeyCache = null;
+  async function vuneRecoveryEncryptionKey(secret){
+    if(vuneRecoveryKeyCache && vuneRecoveryKeyCache.secret === secret) return vuneRecoveryKeyCache;
+    let salt;
+    try{
+      const saved = JSON.parse(localStorage.getItem(RECOVERY_BACKUP_KEY) || "null");
+      if(saved && saved.format === "vune-recovery-backup"){
+        const parsed = fromBase64(saved.salt);
+        if(parsed.length === 16) salt = parsed;
+      }
+    }catch(error){}
+    if(!salt) salt = crypto.getRandomValues(new Uint8Array(16));
+    const key = await deriveKey(secret,salt);
+    vuneRecoveryKeyCache = {secret:secret,salt:salt,key:key};
+    return vuneRecoveryKeyCache;
+  }
+  function persistState(){
+    if(!state || !currentKey) return Promise.resolve(false);
+
+    const stamp = new Date().toISOString();
+    state.settings.lastBackupAt = stamp;
+    const snapshot = JSON.parse(JSON.stringify(state));
+    const keySnapshot = currentKey;
+    const generation = vunePersistGeneration;
+
+    const run = vunePersistQueue.catch(function(){ return undefined; }).then(async function(){
+      const activePayload = await encryptJson(snapshot,keySnapshot);
+      const recovery = await vuneRecoveryEncryptionKey(snapshot.settings.recoveryKey);
+      const recoveryPayload = await encryptJson(snapshot,recovery.key);
+      if(generation !== vunePersistGeneration) return false;
+
+      const previousBackup = localStorage.getItem(RECOVERY_BACKUP_KEY);
+      localStorage.setItem(RECOVERY_BACKUP_KEY,JSON.stringify({
+        format:"vune-recovery-backup",
+        version:1,
+        salt:toBase64(recovery.salt),
+        payload:recoveryPayload,
+        updatedAt:stamp
+      }));
+      try{ localStorage.setItem(DATA_KEY,activePayload); }
+      catch(error){
+        try{ if(previousBackup === null) localStorage.removeItem(RECOVERY_BACKUP_KEY); else localStorage.setItem(RECOVERY_BACKUP_KEY,previousBackup); }catch(rollbackError){}
+        throw error;
+      }
+      return true;
+    });
+
+    vunePersistQueue = run;
+    return run.catch(function(error){
+      showToast("Vune could not save this change. Please try again.");
+      throw error;
+    });
+  }
+
 async function restoreWithRecoveryKey(recoveryKey){ const raw=localStorage.getItem(RECOVERY_BACKUP_KEY); if(!raw)throw new Error("No recovery backup"); const pack=JSON.parse(raw); const key=await deriveKey(recoveryKey,fromBase64(pack.salt)); return normalizeState(await decryptJson(pack.payload,key)); }
 
 function showToast(msg){ const t=safe("toast"); if(!t)return; t.textContent=msg; t.classList.add("show"); clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove("show"),2800); }
@@ -63,7 +118,7 @@ function showApp(){ safe("lockScreen").hidden=true; safe("appShell").hidden=fals
 async function setupVault(passcode){ const salt=crypto.getRandomValues(new Uint8Array(16)); currentKey=await deriveKey(passcode,salt); state=defaultState(); localStorage.setItem(SALT_KEY,toBase64(salt)); await persistState(); showApp(); }
 async function unlockVault(passcode){ const salt=localStorage.getItem(SALT_KEY),payload=localStorage.getItem(DATA_KEY); if(!salt||!payload)throw new Error("No vault"); const key=await deriveKey(passcode,fromBase64(salt)); state=normalizeState(await decryptJson(payload,key)); currentKey=key; showApp(); }
 async function lockApp(){ if(state&&currentKey){try{await persistState();}catch(e){}} state=null; currentKey=null; clearTimeout(autoLockTimer); autoLockTimer=null; hasVault()?showUnlock():showSetup(); }
-function scheduleAutoLock(){ clearTimeout(autoLockTimer); if(!state)return; const m=Number(state.settings.lockMinutes); if(m>0)autoLockTimer=setTimeout(lockApp,m*60000); }
+function scheduleAutoLock(){ clearTimeout(autoLockTimer); autoLockTimer=null; if(!state)return; const m=Number(state.settings.lockMinutes); if(m>0)autoLockTimer=setTimeout(lockApp,m*60000); }
 function noteActivity(){ if(state)scheduleAutoLock(); }
 
 function getEntryDates(){ return Object.keys(state.entries||{}).sort(); }
@@ -1107,57 +1162,7 @@ selectPlan = vuneSetBetaPlan;
     return next;
   };
 
-  /* ---------- Serialized encrypted writes ---------- */
-  let vunePersistQueue = Promise.resolve();
-  let vunePersistGeneration = 0;
-  persistState = function(){
-    if(!state || !currentKey) return Promise.resolve(false);
-
-    const stamp = new Date().toISOString();
-    state.settings.lastBackupAt = stamp;
-    const snapshot = JSON.parse(JSON.stringify(state));
-    const keySnapshot = currentKey;
-    const generation = vunePersistGeneration;
-
-    const run = vunePersistQueue.catch(function(){ return undefined; }).then(async function(){
-      const activePayload = await encryptJson(snapshot,keySnapshot);
-      const recoverySalt = crypto.getRandomValues(new Uint8Array(16));
-      const recoveryKey = await deriveKey(snapshot.settings.recoveryKey,recoverySalt);
-      const recoveryPayload = await encryptJson(snapshot,recoveryKey);
-      if(generation !== vunePersistGeneration) return false;
-
-      const previousBackup = localStorage.getItem(RECOVERY_BACKUP_KEY);
-      localStorage.setItem(RECOVERY_BACKUP_KEY,JSON.stringify({
-        format:"vune-recovery-backup",
-        version:1,
-        salt:toBase64(recoverySalt),
-        payload:recoveryPayload,
-        updatedAt:stamp
-      }));
-      try{ localStorage.setItem(DATA_KEY,activePayload); }
-      catch(error){
-        try{ if(previousBackup === null) localStorage.removeItem(RECOVERY_BACKUP_KEY); else localStorage.setItem(RECOVERY_BACKUP_KEY,previousBackup); }catch(rollbackError){}
-        throw error;
-      }
-      return true;
-    });
-
-    vunePersistQueue = run;
-    return run.catch(function(error){
-      showToast("Vune could not save this change. Please try again.");
-      throw error;
-    });
-  };
-
   /* ---------- Privacy curtain + immediate-on-background lock ---------- */
-  scheduleAutoLock = function(){
-    clearTimeout(autoLockTimer);
-    autoLockTimer = null;
-    if(!state) return;
-    const minutes = Number(state.settings.lockMinutes);
-    if(minutes > 0) autoLockTimer = setTimeout(lockApp,minutes*60000);
-  };
-
   function vuneApplyVisibilityPrivacy(){
     const hidden = document.hidden;
     document.body.classList.toggle("privacy-hidden",hidden);
@@ -1490,28 +1495,7 @@ selectPlan = vuneSetBetaPlan;
     }
   },true);
 
-  /* ---------- Cycle calculations: show irregular history, use plausible cycles for forecasts ---------- */
-  getCycleLengths = function(){
-    const starts = getPeriodStarts(), out = [];
-    for(let i=1;i<starts.length;i++){
-      const days = diffDays(starts[i-1],starts[i]);
-      if(days > 0 && days <= 365) out.push({start:starts[i-1],next:starts[i],days:days});
-    }
-    return out;
-  };
-
-  getPrediction = function(){
-    const starts = getPeriodStarts();
-    if(!starts.length) return null;
-    const usable = getCycleLengths().filter(function(item){ return item.days >= 15 && item.days <= 60; }).slice(-6);
-    const avg = usable.length ? Math.round(average(usable.map(function(item){ return item.days; }))) : 28;
-    const last = starts[starts.length-1];
-    return {
-      date:addDays(last,avg),
-      average:avg,
-      confidence:usable.length>=5 ? "Higher" : usable.length>=2 ? "Building" : "Early estimate"
-    };
-  };
+  /* Cycle history and prediction use the single definitions near the top of this file. */
 
   function vuneTypicalPeriodLength(){
     const starts = getPeriodStarts();

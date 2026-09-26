@@ -1,0 +1,10 @@
+{
+  "name": "vune-web-validation",
+  "private": true,
+  "scripts": {
+    "test:browser": "node tests/browser-smoke.mjs"
+  },
+  "devDependencies": {
+    "playwright": "1.62.1"
+  }
+}

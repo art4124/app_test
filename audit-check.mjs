@@ -42,6 +42,9 @@ assert(runtime.includes("vuneUnlockBlockedUntil"),"unlock retry throttling must 
 assert(runtime.includes('window.addEventListener("storage"'),"multi-tab overwrite guard must exist");
 assert(runtime.includes("vuneCloseSensitiveOverlays"),"locking/backgrounding must close sensitive overlays");
 assert(runtime.includes("vunePersistGeneration"),"stale queued writes must be invalidated after cross-tab changes");
+assert(!/\bgetCycleLengths\s*=\s*function\b/.test(runtime),"cycle history must use one effective implementation");
+assert(!/\bgetPrediction\s*=\s*function\b/.test(runtime),"prediction must use one effective implementation");
+assert(runtime.includes("vuneRecoveryEncryptionKey"),"recovery key derivation should be reused between saves");
 assert(runtime.includes("const cleanEntries = {}"),"restored entries must be sanitized before use");
 
 assert(index.includes("Local encrypted vault"),"Free tier copy should match implemented features");
