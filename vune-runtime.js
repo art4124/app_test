@@ -70,8 +70,8 @@ function getEntryDates(){ return Object.keys(state.entries||{}).sort(); }
 function getPeriodStarts(){ const dates=getEntryDates().filter(d=>state.entries[d]&&state.entries[d].period); return dates.filter(d=>!state.entries[addDays(d,-1)]||!state.entries[addDays(d,-1)].period); }
 function getPeriodDayNumber(date){ if(!state.entries[date]||!state.entries[date].period)return null; let n=1,d=date; while(state.entries[addDays(d,-1)]&&state.entries[addDays(d,-1)].period){n++;d=addDays(d,-1);} return n; }
 function average(a){ return a.length?a.reduce((s,v)=>s+v,0)/a.length:null; }
-function getCycleLengths(){ const s=getPeriodStarts(),out=[]; for(let i=1;i<s.length;i++){const d=diffDays(s[i-1],s[i]); if(d>=15&&d<=60)out.push({start:s[i-1],next:s[i],days:d});} return out; }
-function getPrediction(){ const starts=getPeriodStarts(); if(!starts.length)return null; const cycles=getCycleLengths().slice(-6); const avg=cycles.length?Math.round(average(cycles.map(x=>x.days))):28; const last=starts[starts.length-1]; return {date:addDays(last,avg),average:avg,confidence:cycles.length>=5?"Higher":cycles.length>=2?"Building":"Early estimate"}; }
+function getCycleLengths(){ const s=getPeriodStarts(),out=[]; for(let i=1;i<s.length;i++){const d=diffDays(s[i-1],s[i]); if(d>0)out.push({start:s[i-1],next:s[i],days:d});} return out; }
+function getPrediction(){ const starts=getPeriodStarts(); if(!starts.length)return null; const recorded=getCycleLengths(),cycles=recorded.filter(x=>x.days>=15&&x.days<=60).slice(-6); if(recorded.length&&!cycles.length)return null; const avg=cycles.length?Math.round(average(cycles.map(x=>x.days))):28; const last=starts[starts.length-1]; return {date:addDays(last,avg),average:avg,confidence:recorded.length!==cycles.length?"Variable":cycles.length>=5?"Higher":cycles.length>=2?"Building":"Early estimate"}; }
 function hasAnalytics(){ return planOrder[state.settings.plan]>=planOrder.essential; }
 function hasJournal(){ return planOrder[state.settings.plan]>=planOrder.plus; }
 function hasCompanion(){ return state.settings.plan==="supporter"; }
@@ -86,7 +86,7 @@ function showGate(name,gate){ const view=safe("view-"+name); if(!view)return; le
 function clearGate(name){ const view=safe("view-"+name); if(!view)return; const box=view.querySelector(".feature-gate"); if(box)box.hidden=true; Array.from(view.children).forEach(ch=>{ if(!ch.classList.contains("feature-gate"))ch.hidden=false; }); }
 function showView(name){ if(name==="garden")name="today"; if(recoveryResetRequired&&name!=="settings"){showToast("Create a new vault passcode before continuing.");name="settings";} const gate=gateView(name); if(gate)showGate(name,gate); else clearGate(name); document.querySelectorAll(".view").forEach(v=>v.classList.toggle("active",v.id==="view-"+name)); document.querySelectorAll(".nav-btn[data-view]").forEach(b=>b.classList.toggle("active",b.dataset.view===name)); if(name==="calendar")renderCalendar(); if(name==="journal"&&hasJournal())renderJournal(); if(name==="insights"&&hasAnalytics())renderInsights(); if(name==="settings")renderSettings(); window.scrollTo({top:0,behavior:"smooth"}); }
 
-function renderToday(){ const now=new Date(),hour=now.getHours(); if(safe("todayGreeting"))safe("todayGreeting").textContent=hour<12?"Good morning 💜":hour<18?"Good afternoon 🌿":"Good evening 🌙"; if(safe("todayDate"))safe("todayDate").textContent=now.toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric"}); const p=hasAnalytics()?getPrediction():null; if(safe("predictionDate")){ safe("predictionDate").textContent=hasAnalytics()?(p?prettyDate(p.date,{month:"long",day:"numeric",timeZone:"UTC"}):"Add your first period"):"Essential feature"; safe("predictionDetail").textContent=hasAnalytics()?(p?"About "+Math.max(0,diffDays(todayISO(),p.date))+" days away • "+p.average+"-day average":"Log a period start to begin."):"Upgrade to Essential for cycle analytics."; safe("predictionConfidence").textContent=hasAnalytics()?(p?p.confidence:"Still learning"):"Locked"; } if(safe("activePlanBadge"))safe("activePlanBadge").textContent=planNames[state.settings.plan]; }
+function renderToday(){ const now=new Date(),hour=now.getHours(); if(safe("todayGreeting"))safe("todayGreeting").textContent=hour<12?"Good morning 💜":hour<18?"Good afternoon 🌿":"Good evening 🌙"; if(safe("todayDate"))safe("todayDate").textContent=now.toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric"}); const p=hasAnalytics()?getPrediction():null; if(safe("predictionDate")){ safe("predictionDate").textContent=hasAnalytics()?(p?prettyDate(p.date,{month:"long",day:"numeric",timeZone:"UTC"}):"Add your first period"):"Essential feature"; const remaining=p?diffDays(todayISO(),p.date):null; safe("predictionDetail").textContent=hasAnalytics()?(p?(remaining<0?"Estimate passed "+Math.abs(remaining)+" day"+(remaining===-1?"":"s")+" ago":remaining===0?"Estimated for today":"About "+remaining+" days away")+" • "+p.average+"-day average":"Log a period start to begin."):"Upgrade to Essential for cycle analytics."; safe("predictionConfidence").textContent=hasAnalytics()?(p?p.confidence:"Still learning"):"Locked"; } if(safe("activePlanBadge"))safe("activePlanBadge").textContent=planNames[state.settings.plan]; }
 function loadCheckinForDate(date){ const e=state.entries[date]||{}; if(safe("flowSelect"))safe("flowSelect").value=e.flow||"none"; if(safe("moodSelect"))safe("moodSelect").value=e.mood||""; if(safe("periodToday"))safe("periodToday").checked=Boolean(e.period); if(safe("dailyReflection"))safe("dailyReflection").value=e.reflection||""; document.querySelectorAll("#symptomChips input[type=checkbox]").forEach(i=>i.checked=new Set(e.symptoms||[]).has(i.value)); if(safe("saveCheckinStatus"))safe("saveCheckinStatus").textContent=state.entries[date]?"Saved entry loaded.":""; }
 async function saveCheckin(ev){ ev.preventDefault(); const date=safe("checkinDate").value,period=safe("periodToday").checked,flow=safe("flowSelect").value,mood=safe("moodSelect").value,symptoms=Array.from(document.querySelectorAll("#symptomChips input:checked")).map(i=>i.value),reflection=safe("dailyReflection").value.trim(); if(!(period||flow!=="none"||mood||symptoms.length||reflection)){ if(safe("checkinRequirement"))safe("checkinRequirement").hidden=false; showToast("Add at least one feeling, symptom, cycle detail, or note before saving your check-in.");return;} if(safe("checkinRequirement"))safe("checkinRequirement").hidden=true; state.entries[date]={date,period,flow,mood,symptoms,reflection,updatedAt:new Date().toISOString()}; await persistState(); renderAll(); safe("checkinDate").value=date; loadCheckinForDate(date); showToast("Check-in saved. 💜"); }
 
@@ -1126,7 +1126,7 @@ selectPlan = vuneSetBetaPlan;
       const recoveryPayload = await encryptJson(snapshot,recoveryKey);
       if(generation !== vunePersistGeneration) return false;
 
-      localStorage.setItem(DATA_KEY,activePayload);
+      const previousBackup = localStorage.getItem(RECOVERY_BACKUP_KEY);
       localStorage.setItem(RECOVERY_BACKUP_KEY,JSON.stringify({
         format:"vune-recovery-backup",
         version:1,
@@ -1134,6 +1134,11 @@ selectPlan = vuneSetBetaPlan;
         payload:recoveryPayload,
         updatedAt:stamp
       }));
+      try{ localStorage.setItem(DATA_KEY,activePayload); }
+      catch(error){
+        try{ if(previousBackup === null) localStorage.removeItem(RECOVERY_BACKUP_KEY); else localStorage.setItem(RECOVERY_BACKUP_KEY,previousBackup); }catch(rollbackError){}
+        throw error;
+      }
       return true;
     });
 
@@ -1283,6 +1288,9 @@ selectPlan = vuneSetBetaPlan;
       if(force) showToast("A new passcode is required before using Vune.");
       return false;
     }
+
+    try{ await vunePersistQueue; }catch(error){ showToast("Finish saving your changes before changing the passcode."); return false; }
+    if(!state || (!currentKey && !force)){ showToast("Unlock Vune before changing the passcode."); return false; }
 
     const oldSalt = localStorage.getItem(SALT_KEY);
     const oldPayload = localStorage.getItem(DATA_KEY);
@@ -1534,6 +1542,11 @@ selectPlan = vuneSetBetaPlan;
     if(!state || !hasAnalytics()) return;
     const prediction = getPrediction();
     const detail = safe("predictionDetail");
+    if(!prediction && detail && getPeriodStarts().length > 1){
+      detail.textContent = "Recorded cycle lengths vary too much for an estimate yet.";
+      const date = safe("predictionDate");
+      if(date) date.textContent = "Estimate unavailable";
+    }
     if(prediction && detail){
       const delta = diffDays(todayISO(),prediction.date);
       if(delta < 0) detail.textContent = "Estimate passed "+Math.abs(delta)+" day"+(Math.abs(delta)===1?"":"s")+" ago • "+prediction.average+"-day average";
