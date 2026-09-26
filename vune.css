@@ -2620,7 +2620,7 @@ body .plan-card .new-unlock::before{
 /* Bloom Notes text follows the active accent while keeping reading contrast. */
 #view-journal .journal-paper{
   --journal-text:var(--ink);
-  --journal-muted:var(--muted);
+  --journal-muted:color-mix(in srgb,#625a68 85%,var(--vune-accent-ink) 15%);
   --journal-accent:var(--vune-accent-ink);
   color:var(--journal-text);
 }
