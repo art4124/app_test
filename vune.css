@@ -2616,3 +2616,25 @@ body.theme-dark .report-metric small{
 body .plan-card .new-unlock::before{
   content:none!important;
 }
+
+/* Bloom Notes text follows the active accent while keeping reading contrast. */
+#view-journal .journal-paper{
+  --journal-text:var(--ink);
+  --journal-muted:color-mix(in srgb,#625a68 85%,var(--vune-accent-ink) 15%);
+  --journal-accent:var(--vune-accent-ink);
+  color:var(--journal-text);
+}
+body.theme-dark #view-journal .journal-paper{
+  --journal-text:var(--vune-dark-text);
+  --journal-muted:var(--vune-dark-muted);
+  --journal-accent:var(--vune-accent);
+}
+#view-journal .journal-page-heading h3{color:var(--journal-accent)!important}
+#view-journal .journal-page-heading p,
+#view-journal .journal-save-row p,
+#view-journal .journal-form .label-optional{color:var(--journal-muted)!important}
+#view-journal .journal-form label,
+#view-journal .journal-form input,
+#view-journal .journal-form textarea{color:var(--journal-text)!important}
+#view-journal .journal-form input::placeholder,
+#view-journal .journal-form textarea::placeholder{color:var(--journal-muted)!important;opacity:1}

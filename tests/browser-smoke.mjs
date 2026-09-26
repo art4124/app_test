@@ -26,6 +26,46 @@ try {
   const errors = [];
   page.on('pageerror', error => errors.push(error.message));
   await page.goto(url);
+  const contrastFailures = await page.evaluate(() => {
+    const accents = ['lavender','blue','mint','pink','peach','periwinkle','aqua','sage','butter','mauve'];
+    const channel = value => value <= .04045 ? value / 12.92 : ((value + .055) / 1.055) ** 2.4;
+    const luminance = color => {
+      const rgb = color.startsWith('#')
+        ? [1,3,5].map(index => parseInt(color.slice(index,index+2),16))
+        : color.match(/[\d.]+/g).slice(0,3).map(Number);
+      return rgb.map(value => channel(value / 255)).reduce((sum,value,index) => sum + value * [.2126,.7152,.0722][index],0);
+    };
+    const contrast = (foreground, background) => {
+      const a = luminance(foreground), b = luminance(background);
+      return (Math.max(a,b) + .05) / (Math.min(a,b) + .05);
+    };
+    const failures = [];
+    const headingColors = {light:new Set(),dark:new Set()};
+    for(const mode of ['light','dark']) for(const accent of accents){
+      vuneApplyDisplayPreferences(mode,accent);
+      headingColors[mode].add(getComputedStyle(document.querySelector('#view-journal .journal-page-heading h3')).color);
+      const paper = mode === 'dark' ? '#211e26' : '#fffdf8';
+      const field = mode === 'dark' ? '#29252f' : '#ffffff';
+      for(const [selector,background,pseudo] of [
+        ['.journal-page-heading h3',paper],
+        ['.journal-page-heading p',paper],
+        ['.journal-meta-row label',paper],
+        ['.journal-writing-label',paper],
+        ['#journalTitle',field,'::placeholder'],
+        ['#journalText',field,'::placeholder']
+      ]){
+        const element = document.querySelector('#view-journal '+selector);
+        const color = getComputedStyle(element,pseudo).color;
+        if(contrast(color,background) < 4.5) failures.push({mode,accent,selector,color});
+      }
+    }
+    if(headingColors.light.size !== accents.length || headingColors.dark.size !== accents.length){
+      failures.push({reason:'Journal heading did not follow every selected accent'});
+    }
+    vuneApplyDisplayPreferences('light','lavender');
+    return failures;
+  });
+  assert.deepEqual(contrastFailures, [], 'Bloom Notes text should remain readable in every theme');
   await page.locator('#newPasscode').fill('FictionalPasscode-123');
   await page.locator('#confirmPasscode').fill('FictionalPasscode-123');
   await page.locator('#setupForm button[type=submit]').click();
