@@ -44,6 +44,7 @@ assert(runtime.includes("vuneCloseSensitiveOverlays"),"locking/backgrounding mus
 assert(runtime.includes("vunePersistGeneration"),"stale queued writes must be invalidated after cross-tab changes");
 assert(!/\bgetCycleLengths\s*=\s*function\b/.test(runtime),"cycle history must use one effective implementation");
 assert(!/\bgetPrediction\s*=\s*function\b/.test(runtime),"prediction must use one effective implementation");
+assert(!/\brenderSettings\s*=\s*function\b/.test(runtime),"Settings must use one renderer with ordered hooks");
 assert(runtime.includes("vuneRecoveryEncryptionKey"),"recovery key derivation should be reused between saves");
 assert(runtime.includes("const cleanEntries = {}"),"restored entries must be sanitized before use");
 
