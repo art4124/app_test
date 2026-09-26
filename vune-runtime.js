@@ -17,6 +17,7 @@ let journalEditingId = null;
 let calendarCursor = new Date();
 calendarCursor.setDate(1);
 let recoveryResetRequired = false;
+const vuneSettingsRenderHooks = [];
 
 const planNames = { free:"Free", essential:"Essential", plus:"Plus", complete:"Complete", supporter:"Supporter" };
 const planOrder = { free:0, essential:1, plus:2, complete:3, supporter:4 };
@@ -45,15 +46,72 @@ async function deriveKey(secret,salt){
   const material=await crypto.subtle.importKey("raw",encoder.encode(secret),"PBKDF2",false,["deriveKey"]);
   return crypto.subtle.deriveKey({name:"PBKDF2",salt,iterations:ITERATIONS,hash:"SHA-256"},material,{name:"AES-GCM",length:256},false,["encrypt","decrypt"]);
 }
-async function encryptJson(value,key){ const iv=crypto.getRandomValues(new Uint8Array(12)); const ct=await crypto.subtle.encrypt({name:"AES-GCM",iv},key,encoder.encode(JSON.stringify(value))); return JSON.stringify({v:1,iv:toBase64(iv),ciphertext:toBase64(new Uint8Array(ct))}); }
+async function encryptSerializedJson(plaintext,key){ const iv=crypto.getRandomValues(new Uint8Array(12)); const ct=await crypto.subtle.encrypt({name:"AES-GCM",iv},key,encoder.encode(plaintext)); return JSON.stringify({v:1,iv:toBase64(iv),ciphertext:toBase64(new Uint8Array(ct))}); }
+async function encryptJson(value,key){ return encryptSerializedJson(JSON.stringify(value),key); }
 async function decryptJson(payload,key){ const p=JSON.parse(payload); const plain=await crypto.subtle.decrypt({name:"AES-GCM",iv:fromBase64(p.iv)},key,fromBase64(p.ciphertext)); return JSON.parse(decoder.decode(plain)); }
 
 function defaultState(){ return {version:2,createdAt:new Date().toISOString(),settings:{plan:"free",lockMinutes:5,appearance:"system",companionName:"Luma",recoveryKey:randomRecoveryKey(),termsAcceptedVersion:null,lastBackupAt:null},entries:{},journals:[],assistantMessages:[],ui:{}}; }
 function normalizeState(v){ const b=defaultState(); const n=Object.assign({},b,v||{}); n.settings=Object.assign({},b.settings,n.settings||{}); if(!n.settings.recoveryKey)n.settings.recoveryKey=randomRecoveryKey(); n.entries=n.entries||{}; n.journals=Array.isArray(n.journals)?n.journals:[]; n.assistantMessages=Array.isArray(n.assistantMessages)?n.assistantMessages:[]; n.ui=Object.assign({},b.ui,n.ui||{}); return n; }
 function hasVault(){ return Boolean(localStorage.getItem(DATA_KEY)&&localStorage.getItem(SALT_KEY)); }
 
-async function persistState(){ if(!state||!currentKey)return; localStorage.setItem(DATA_KEY,await encryptJson(state,currentKey)); await persistRecoveryBackup(); }
-async function persistRecoveryBackup(){ if(!state||!state.settings.recoveryKey)return; const salt=crypto.getRandomValues(new Uint8Array(16)); const key=await deriveKey(state.settings.recoveryKey, salt); const copy=JSON.parse(JSON.stringify(state)); const payload=await encryptJson(copy,key); localStorage.setItem(RECOVERY_BACKUP_KEY,JSON.stringify({format:"vune-recovery-backup",version:1,salt:toBase64(salt),payload,updatedAt:new Date().toISOString()})); state.settings.lastBackupAt=new Date().toISOString(); }
+  /* ---------- Serialized encrypted writes ---------- */
+  let vunePersistQueue = Promise.resolve();
+  let vunePersistGeneration = 0;
+  let vuneRecoveryKeyCache = null;
+  async function vuneRecoveryEncryptionKey(secret){
+    if(vuneRecoveryKeyCache && vuneRecoveryKeyCache.secret === secret) return vuneRecoveryKeyCache;
+    let salt;
+    try{
+      const saved = JSON.parse(localStorage.getItem(RECOVERY_BACKUP_KEY) || "null");
+      if(saved && saved.format === "vune-recovery-backup"){
+        const parsed = fromBase64(saved.salt);
+        if(parsed.length === 16) salt = parsed;
+      }
+    }catch(error){}
+    if(!salt) salt = crypto.getRandomValues(new Uint8Array(16));
+    const key = await deriveKey(secret,salt);
+    vuneRecoveryKeyCache = {secret:secret,salt:salt,key:key};
+    return vuneRecoveryKeyCache;
+  }
+  function persistState(){
+    if(!state || !currentKey) return Promise.resolve(false);
+
+    const stamp = new Date().toISOString();
+    state.settings.lastBackupAt = stamp;
+    const snapshot = JSON.stringify(state);
+    const recoverySecret = state.settings.recoveryKey;
+    const keySnapshot = currentKey;
+    const generation = vunePersistGeneration;
+
+    const run = vunePersistQueue.catch(function(){ return undefined; }).then(async function(){
+      const activePayload = await encryptSerializedJson(snapshot,keySnapshot);
+      const recovery = await vuneRecoveryEncryptionKey(recoverySecret);
+      const recoveryPayload = await encryptSerializedJson(snapshot,recovery.key);
+      if(generation !== vunePersistGeneration) return false;
+
+      const previousBackup = localStorage.getItem(RECOVERY_BACKUP_KEY);
+      localStorage.setItem(RECOVERY_BACKUP_KEY,JSON.stringify({
+        format:"vune-recovery-backup",
+        version:1,
+        salt:toBase64(recovery.salt),
+        payload:recoveryPayload,
+        updatedAt:stamp
+      }));
+      try{ localStorage.setItem(DATA_KEY,activePayload); }
+      catch(error){
+        try{ if(previousBackup === null) localStorage.removeItem(RECOVERY_BACKUP_KEY); else localStorage.setItem(RECOVERY_BACKUP_KEY,previousBackup); }catch(rollbackError){}
+        throw error;
+      }
+      return true;
+    });
+
+    vunePersistQueue = run;
+    return run.catch(function(error){
+      showToast("Vune could not save this change. Please try again.");
+      throw error;
+    });
+  }
+
 async function restoreWithRecoveryKey(recoveryKey){ const raw=localStorage.getItem(RECOVERY_BACKUP_KEY); if(!raw)throw new Error("No recovery backup"); const pack=JSON.parse(raw); const key=await deriveKey(recoveryKey,fromBase64(pack.salt)); return normalizeState(await decryptJson(pack.payload,key)); }
 
 function showToast(msg){ const t=safe("toast"); if(!t)return; t.textContent=msg; t.classList.add("show"); clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove("show"),2800); }
@@ -63,7 +121,7 @@ function showApp(){ safe("lockScreen").hidden=true; safe("appShell").hidden=fals
 async function setupVault(passcode){ const salt=crypto.getRandomValues(new Uint8Array(16)); currentKey=await deriveKey(passcode,salt); state=defaultState(); localStorage.setItem(SALT_KEY,toBase64(salt)); await persistState(); showApp(); }
 async function unlockVault(passcode){ const salt=localStorage.getItem(SALT_KEY),payload=localStorage.getItem(DATA_KEY); if(!salt||!payload)throw new Error("No vault"); const key=await deriveKey(passcode,fromBase64(salt)); state=normalizeState(await decryptJson(payload,key)); currentKey=key; showApp(); }
 async function lockApp(){ if(state&&currentKey){try{await persistState();}catch(e){}} state=null; currentKey=null; clearTimeout(autoLockTimer); autoLockTimer=null; hasVault()?showUnlock():showSetup(); }
-function scheduleAutoLock(){ clearTimeout(autoLockTimer); if(!state)return; const m=Number(state.settings.lockMinutes); if(m>0)autoLockTimer=setTimeout(lockApp,m*60000); }
+function scheduleAutoLock(){ clearTimeout(autoLockTimer); autoLockTimer=null; if(!state)return; const m=Number(state.settings.lockMinutes); if(m>0)autoLockTimer=setTimeout(lockApp,m*60000); }
 function noteActivity(){ if(state)scheduleAutoLock(); }
 
 function getEntryDates(){ return Object.keys(state.entries||{}).sort(); }
@@ -110,7 +168,7 @@ async function sendAssistant(ev){ev.preventDefault();if(!hasCompanion())return;c
 
 function injectSettingsAdditions(){ const menu=document.querySelector(".settings-menu"); if(!menu)return; if(!document.querySelector('[data-settings-tab="appearance"]')){const b=document.createElement("button");b.className="settings-tab";b.type="button";b.dataset.settingsTab="appearance";b.innerHTML='<span>◐</span><span><strong>Appearance</strong><small>Light & dark</small></span>';menu.insertBefore(b,menu.querySelector('.danger-settings-tab'));} if(!document.querySelector('[data-settings-tab="companion"]')){const b=document.createElement("button");b.className="settings-tab";b.type="button";b.dataset.settingsTab="companion";b.innerHTML='<span>✦</span><span><strong>Companion</strong><small>Name your guide</small></span>';menu.insertBefore(b,menu.querySelector('.danger-settings-tab'));} const panels=document.querySelector(".settings-panels"); if(panels&&!document.querySelector('[data-settings-panel="appearance"]')){const s=document.createElement("section");s.className="settings-panel";s.dataset.settingsPanel="appearance";s.hidden=true;s.innerHTML='<div class="settings-panel-heading"><div><span class="eyebrow">Appearance</span><h3>Choose your lighting</h3></div></div><div class="settings-mini-card"><div class="appearance-options"><button class="appearance-option" type="button" data-appearance="light">☀️<br><strong>Light</strong></button><button class="appearance-option" type="button" data-appearance="dark">🌙<br><strong>Dark</strong></button><button class="appearance-option" type="button" data-appearance="system">◐<br><strong>System</strong></button></div></div>';panels.appendChild(s);} if(panels&&!document.querySelector('[data-settings-panel="companion"]')){const s=document.createElement("section");s.className="settings-panel";s.dataset.settingsPanel="companion";s.hidden=true;s.innerHTML='<div class="settings-panel-heading"><div><span class="eyebrow">Companion</span><h3>Your Vune Companion</h3></div></div><div class="settings-mini-card"><label>Companion name<input id="companionNameInput" maxlength="30" placeholder="Luma"></label><button id="saveCompanionNameBtn" class="secondary-btn" type="button">Save name</button><button id="resetCompanionNameBtn" class="text-btn" type="button">Reset to Luma</button></div>';panels.appendChild(s);} }
 function showSettingsCategory(name){ document.querySelectorAll("[data-settings-tab]").forEach(t=>{const a=t.dataset.settingsTab===name;t.classList.toggle("active",a);t.setAttribute("aria-selected",String(a));}); document.querySelectorAll("[data-settings-panel]").forEach(p=>{const a=p.dataset.settingsPanel===name;p.classList.toggle("active",a);p.hidden=!a;}); }
-function renderSettings(){ if(!state)return; injectSettingsAdditions(); const cur=state.settings.plan||"free",det=planDetails[cur]; if(safe("currentPlanCard"))safe("currentPlanCard").innerHTML='<div class="current-plan-main"><div><span class="current-plan-label">Your plan</span><strong>'+esc(planNames[cur])+'</strong><small>'+esc(det.note)+'</small></div><div class="current-plan-price">'+esc(det.price)+'</div></div><span class="current-plan-status">Current</span>'; document.querySelectorAll(".plan-card").forEach(b=>{const isCur=b.dataset.plan===cur;b.hidden=isCur;let unlock=b.querySelector(".new-unlock");if(!unlock){unlock=document.createElement("span");unlock.className="new-unlock";b.appendChild(unlock);} }); if(safe("lockMinutesSelect"))safe("lockMinutesSelect").value=String(state.settings.lockMinutes); if(safe("companionNameInput"))safe("companionNameInput").value=state.settings.companionName||"Luma"; applyAppearance(); rewriteSettingsCopy(); if(recoveryResetRequired){showSettingsCategory("security");document.querySelectorAll(".side-nav,.mobile-nav,.settings-menu").forEach(el=>el.classList.add("locked-navigation"));}else document.querySelectorAll(".side-nav,.mobile-nav,.settings-menu").forEach(el=>el.classList.remove("locked-navigation")); }
+function renderSettings(){ if(!state)return; vuneSyncStoredBetaPlan(); injectSettingsAdditions(); const cur=state.settings.plan||"free",det=planDetails[cur]; if(safe("currentPlanCard"))safe("currentPlanCard").innerHTML='<div class="current-plan-main"><div><span class="current-plan-label">Your plan</span><strong>'+esc(planNames[cur])+'</strong><small>'+esc(det.note)+'</small></div><div class="current-plan-price">'+esc(det.price)+'</div></div><span class="current-plan-status">Current</span>'; document.querySelectorAll(".plan-card").forEach(b=>{const isCur=b.dataset.plan===cur;b.hidden=isCur;let unlock=b.querySelector(".new-unlock");if(!unlock){unlock=document.createElement("span");unlock.className="new-unlock";b.appendChild(unlock);} }); if(safe("lockMinutesSelect"))safe("lockMinutesSelect").value=String(state.settings.lockMinutes); if(safe("companionNameInput"))safe("companionNameInput").value=state.settings.companionName||"Luma"; applyAppearance(); rewriteSettingsCopy(); if(recoveryResetRequired){showSettingsCategory("security");document.querySelectorAll(".side-nav,.mobile-nav,.settings-menu").forEach(el=>el.classList.add("locked-navigation"));}else document.querySelectorAll(".side-nav,.mobile-nav,.settings-menu").forEach(el=>el.classList.remove("locked-navigation")); vuneSettingsRenderHooks.forEach(hook=>hook()); }
 function rewriteSettingsCopy(){ const backup=document.querySelector('[data-settings-panel="backup"]'); if(backup){backup.innerHTML='<div class="settings-panel-heading"><div><span class="eyebrow">Backup</span><h3>Recovery Key</h3></div></div><div class="settings-mini-card"><p class="muted">Your web-test backup stays encrypted in this browser. Your Recovery Key is what can unlock it if you forget your vault passcode.</p><div class="button-row"><button id="restoreBackupBtn" class="secondary-btn" type="button">Restore backup</button><button id="showRecoveryKeyBtn" class="secondary-btn" type="button">Show current Recovery Key</button></div><p id="backupStatus" class="muted">'+(state.settings.lastBackupAt?'Last protected: '+esc(new Date(state.settings.lastBackupAt).toLocaleString()):'Backup will be protected after your next save.')+'</p><div id="recoveryKeyDisplay" class="recovery-key-box" hidden></div></div>'; } const privacy=document.querySelector('[data-settings-panel="privacy"]'); if(privacy){privacy.innerHTML='<div class="settings-panel-heading"><div><span class="eyebrow">Privacy</span><h3>Your data belongs to you</h3></div></div><div class="privacy-promise"><div><strong>Stored locally</strong><span>Your personal health information stays encrypted in this browser for this web prototype.</span></div><div><strong>Not sold</strong><span>Vune does not sell your personal health data.</span></div><div><strong>No Vune health-data server</strong><span>This prototype does not back up your health entries to a Vune server.</span></div><div><strong>Encrypted</strong><span>Your vault and local recovery copy are encrypted.</span></div></div><div class="legal-link-row"><a class="text-link" href="privacy.html">Privacy notes →</a><a class="text-link" href="terms.html">Terms & Conditions →</a></div>'; } const data=document.querySelector('[data-settings-panel="data"]'); if(data){data.innerHTML='<div class="settings-panel-heading"><div><span class="eyebrow">Data</span><h3>Local Vune data</h3></div></div><div class="settings-mini-card"><p class="muted">Vune no longer uses downloadable backup files in this test. Restore is handled with your Recovery Key.</p><div class="button-row"><button class="secondary-btn" type="button" data-settings-jump="backup">Recovery & backup</button></div></div><div class="settings-mini-card danger-settings-card"><p class="muted">Deleting this browser copy removes the encrypted vault and its local recovery backup. This cannot be recovered afterward.</p><button id="deleteAllBtn" class="danger-btn" type="button">Delete this browser copy</button></div>'; } const sec=document.querySelector('[data-settings-panel="security"]'); if(sec&&!sec.querySelector(".recovery-warning")){const w=document.createElement("p");w.className="recovery-warning";w.textContent="Important: if you lose your vault passcode and Recovery Key and cannot use a supported device recovery method, Vune cannot recover your encrypted data. There is no master key or backdoor.";sec.appendChild(w);} }
 async function selectPlan(plan){ if(!planNames[plan])return;state.settings.plan=plan;await persistState();renderAll();showToast(planNames[plan]+" is ready to explore ✨ No payment was collected."); }
 async function changePasscode(force=false){ return false; }
@@ -344,13 +402,11 @@ answerAssistant = function(prompt){
 };
 
 /* Ensure settings render also refreshes accents and hides the active plan from the chooser. */
-const vuneOriginalRenderSettings = renderSettings;
-renderSettings = function(){
-  vuneOriginalRenderSettings();
+vuneSettingsRenderHooks.push(function(){
   if(state && state.settings && !VUNE_ACCENTS.includes(state.settings.accent)) state.settings.accent = "lavender";
   document.querySelectorAll(".plan-card").forEach(card => { card.hidden = card.dataset.plan === state.settings.plan; });
   applyAppearance();
-};
+});
 
 /* Batch-specific interaction hooks. */
 document.addEventListener("click", async function(event){
@@ -446,9 +502,7 @@ function vuneEnsureTenAccents(){
   vuneApplyDisplayPreferences(vuneStoredAppearance(), vuneBatchStoredAccent());
 }
 
-const vuneBatchRenderSettingsBase = renderSettings;
-renderSettings = function(){
-  vuneBatchRenderSettingsBase();
+vuneSettingsRenderHooks.push(function(){
   vuneEnsureTenAccents();
   if(!state || !state.settings) return;
   const savedPlan = localStorage.getItem(VUNE_BETA_PLAN_KEY);
@@ -460,7 +514,7 @@ renderSettings = function(){
   if(completeUnlock) completeUnlock.textContent = "Adds Advanced Pattern Insights";
   const supporterUnlock = document.querySelector('.plan-card[data-plan="supporter"] .new-unlock');
   if(supporterUnlock) supporterUnlock.textContent = "Adds Vune AI Companion";
-};
+});
 
 /* Beta plan switcher: explicit selection, persistent, freely switchable. */
 async function vuneSelectBetaPlan(plan){
@@ -712,13 +766,6 @@ function vuneSyncStoredBetaPlan(){
   if(savedPlan && planNames[savedPlan]) state.settings.plan = savedPlan;
 }
 
-/* Apply the saved beta plan before Settings renders, so Current Plan never shows stale state. */
-const vuneSubscriptionRenderSettingsBase = renderSettings;
-renderSettings = function(){
-  vuneSyncStoredBetaPlan();
-  vuneSubscriptionRenderSettingsBase();
-};
-
 /* Apply the saved beta plan before any whole-app rerender as well. */
 const vuneSubscriptionRenderAllBase = renderAll;
 renderAll = function(){
@@ -789,19 +836,14 @@ selectPlan = vuneSetBetaPlan;
     };
   }
 
-  if(typeof renderSettings === "function"){
-    const baseRenderSettings = renderSettings;
-    renderSettings = function(){
-      const result = baseRenderSettings();
+  vuneSettingsRenderHooks.push(function(){
+    stableAppearance();
+    syncPlanBadge();
+    requestAnimationFrame(function(){
       stableAppearance();
       syncPlanBadge();
-      requestAnimationFrame(function(){
-        stableAppearance();
-        syncPlanBadge();
-      });
-      return result;
-    };
-  }
+    });
+  });
 
   if(typeof renderToday === "function"){
     const baseRenderToday = renderToday;
@@ -1107,57 +1149,7 @@ selectPlan = vuneSetBetaPlan;
     return next;
   };
 
-  /* ---------- Serialized encrypted writes ---------- */
-  let vunePersistQueue = Promise.resolve();
-  let vunePersistGeneration = 0;
-  persistState = function(){
-    if(!state || !currentKey) return Promise.resolve(false);
-
-    const stamp = new Date().toISOString();
-    state.settings.lastBackupAt = stamp;
-    const snapshot = JSON.parse(JSON.stringify(state));
-    const keySnapshot = currentKey;
-    const generation = vunePersistGeneration;
-
-    const run = vunePersistQueue.catch(function(){ return undefined; }).then(async function(){
-      const activePayload = await encryptJson(snapshot,keySnapshot);
-      const recoverySalt = crypto.getRandomValues(new Uint8Array(16));
-      const recoveryKey = await deriveKey(snapshot.settings.recoveryKey,recoverySalt);
-      const recoveryPayload = await encryptJson(snapshot,recoveryKey);
-      if(generation !== vunePersistGeneration) return false;
-
-      const previousBackup = localStorage.getItem(RECOVERY_BACKUP_KEY);
-      localStorage.setItem(RECOVERY_BACKUP_KEY,JSON.stringify({
-        format:"vune-recovery-backup",
-        version:1,
-        salt:toBase64(recoverySalt),
-        payload:recoveryPayload,
-        updatedAt:stamp
-      }));
-      try{ localStorage.setItem(DATA_KEY,activePayload); }
-      catch(error){
-        try{ if(previousBackup === null) localStorage.removeItem(RECOVERY_BACKUP_KEY); else localStorage.setItem(RECOVERY_BACKUP_KEY,previousBackup); }catch(rollbackError){}
-        throw error;
-      }
-      return true;
-    });
-
-    vunePersistQueue = run;
-    return run.catch(function(error){
-      showToast("Vune could not save this change. Please try again.");
-      throw error;
-    });
-  };
-
   /* ---------- Privacy curtain + immediate-on-background lock ---------- */
-  scheduleAutoLock = function(){
-    clearTimeout(autoLockTimer);
-    autoLockTimer = null;
-    if(!state) return;
-    const minutes = Number(state.settings.lockMinutes);
-    if(minutes > 0) autoLockTimer = setTimeout(lockApp,minutes*60000);
-  };
-
   function vuneApplyVisibilityPrivacy(){
     const hidden = document.hidden;
     document.body.classList.toggle("privacy-hidden",hidden);
@@ -1490,28 +1482,7 @@ selectPlan = vuneSetBetaPlan;
     }
   },true);
 
-  /* ---------- Cycle calculations: show irregular history, use plausible cycles for forecasts ---------- */
-  getCycleLengths = function(){
-    const starts = getPeriodStarts(), out = [];
-    for(let i=1;i<starts.length;i++){
-      const days = diffDays(starts[i-1],starts[i]);
-      if(days > 0 && days <= 365) out.push({start:starts[i-1],next:starts[i],days:days});
-    }
-    return out;
-  };
-
-  getPrediction = function(){
-    const starts = getPeriodStarts();
-    if(!starts.length) return null;
-    const usable = getCycleLengths().filter(function(item){ return item.days >= 15 && item.days <= 60; }).slice(-6);
-    const avg = usable.length ? Math.round(average(usable.map(function(item){ return item.days; }))) : 28;
-    const last = starts[starts.length-1];
-    return {
-      date:addDays(last,avg),
-      average:avg,
-      confidence:usable.length>=5 ? "Higher" : usable.length>=2 ? "Building" : "Early estimate"
-    };
-  };
+  /* Cycle history and prediction use the single definitions near the top of this file. */
 
   function vuneTypicalPeriodLength(){
     const starts = getPeriodStarts();

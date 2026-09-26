@@ -25,6 +25,18 @@ jobs:
       - name: Run Vune static audit
         run: node audit-check.mjs
 
+      - name: Check final cycle calculations
+        run: node tests/runtime-logic.mjs
+
+      - name: Install browser test dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Install Chromium for browser checks
+        run: npx playwright install --with-deps chromium
+
+      - name: Exercise core Vune flows in a fresh browser
+        run: npm run test:browser
+
       - name: Check required production files
         run: |
           test -f index.html

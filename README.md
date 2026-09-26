@@ -21,6 +21,8 @@ A privacy-first, local-only web prototype for testing the Vune period tracker be
 - Offline-capable PWA app shell
 - No ad SDKs, analytics SDKs, external AI calls, or health-data backend
 
+GitHub Actions checks the final cycle calculations and runs a Chromium test of vault setup, check-ins, journal, Health Summary, passcode rotation, and Recovery Key restoration before Pages deployment.
+
 ## Future product ideas
 
 - Vune Garden — a gentle plant-growth experience tied to check-ins may be reconsidered in a future update after the core tracker is stable. It is not part of the current beta.
@@ -30,6 +32,8 @@ A privacy-first, local-only web prototype for testing the Vune period tracker be
 **Use fictional health information in the web prototype.**
 
 The browser build validates the product experience and local-encryption flow. It is not a substitute for the final iOS architecture using Keychain, native authentication, native storage protections, and the planned security review.
+
+The browser vault and local recovery copy are both rewritten when data changes. Reusing the recovery key derivation and one serialized snapshot reduces repeated work, but very large journals or histories may still reach browser storage limits. A production storage redesign needs a separately tested migration.
 
 ## Run locally
 
