@@ -18,6 +18,7 @@ let calendarCursor = new Date();
 calendarCursor.setDate(1);
 let recoveryResetRequired = false;
 const vuneSettingsRenderHooks = [];
+const vuneRenderAllHooks = [];
 
 const planNames = { free:"Free", essential:"Essential", plus:"Plus", complete:"Complete", supporter:"Supporter" };
 const planOrder = { free:0, essential:1, plus:2, complete:3, supporter:4 };
@@ -181,7 +182,7 @@ function ensureTermsLinks(){ const f=document.querySelector(".sidebar-footer");i
 function ensureTermsGate(){ if(safe("termsGate"))return; const g=document.createElement("div");g.id="termsGate";g.className="terms-gate";g.hidden=true;g.innerHTML='<section class="terms-card"><span class="eyebrow">Before you continue</span><h2>Vune Terms & Conditions</h2><p>Vune is for cycle tracking and personal wellness organization. It is not medical advice, diagnosis, treatment, contraception, fertility care, or emergency care.</p><p>Your encrypted vault has no Vune master key. If you lose your passcode, Recovery Key, and supported recovery methods, your data may be unrecoverable.</p><p>The web prototype stores encrypted health entries and its encrypted recovery copy locally in this browser. It does not collect payment.</p><p><a class="text-link" href="terms.html" target="_blank" rel="noopener">Read the full Terms & Conditions →</a></p><label class="terms-check"><input id="termsAgreeCheck" type="checkbox"><span>I have read and agree to the Vune Terms & Conditions.</span></label><div class="terms-actions"><button id="acceptTermsBtn" class="primary-btn" type="button" disabled>Agree & continue</button></div></section>';document.body.appendChild(g);safe("termsAgreeCheck").onchange=e=>safe("acceptTermsBtn").disabled=!e.target.checked;safe("acceptTermsBtn").onclick=async()=>{state.settings.termsAcceptedVersion=TERMS_VERSION;await persistState();g.hidden=true;showToast("Terms accepted.");}; }
 function showTermsGate(){ensureTermsGate();safe("termsGate").hidden=false;}
 
-function renderAll(){ renderToday();renderCalendar();if(hasJournal())renderJournal();if(hasAnalytics())renderInsights();renderAssistant();renderSettings(); }
+function renderAll(){ vuneSyncStoredBetaPlan(); renderToday();renderCalendar();if(hasJournal())renderJournal();if(hasAnalytics())renderInsights();renderAssistant();renderSettings(); vuneRenderAllHooks.forEach(hook=>hook()); }
 
 function bindEvents(){
   safe("setupForm").addEventListener("submit",async e=>{e.preventDefault();const a=safe("newPasscode").value,b=safe("confirmPasscode").value;if(a.length<8)return showToast("Use at least 8 characters.");if(a!==b)return showToast("Passcodes do not match.");try{await setupVault(a);safe("newPasscode").value="";safe("confirmPasscode").value="";showToast("Encrypted Vune vault created.");}catch(err){showToast("Could not create the encrypted vault in this browser.");}});
@@ -741,13 +742,11 @@ ensureRecoveryModal = function(){
 /* Recovery Key reveal is implemented by the final secure-dialog layer below. */
 
 /* Keep the newly added controls available whenever app content rerenders. */
-const vuneBatchRenderAllBase = renderAll;
-renderAll = function(){
-  vuneBatchRenderAllBase();
+vuneRenderAllHooks.push(function(){
   vuneEnsurePastCheckinsView();
   vuneEnsureTenAccents();
   applyAppearance();
-};
+});
 
 /* Apply persisted beta appearance immediately, including lock screen. */
 vuneApplyDisplayPreferences(vuneStoredAppearance(), vuneBatchStoredAccent());
@@ -765,13 +764,6 @@ function vuneSyncStoredBetaPlan(){
   const savedPlan = localStorage.getItem(VUNE_BETA_PLAN_KEY);
   if(savedPlan && planNames[savedPlan]) state.settings.plan = savedPlan;
 }
-
-/* Apply the saved beta plan before any whole-app rerender as well. */
-const vuneSubscriptionRenderAllBase = renderAll;
-renderAll = function(){
-  vuneSyncStoredBetaPlan();
-  vuneSubscriptionRenderAllBase();
-};
 
 /* One source of truth for beta plan selection. The existing click handlers can call either name. */
 async function vuneSetBetaPlan(plan){
@@ -854,15 +846,10 @@ selectPlan = vuneSetBetaPlan;
     };
   }
 
-  if(typeof renderAll === "function"){
-    const baseRenderAll = renderAll;
-    renderAll = function(){
-      const result = baseRenderAll();
-      stableAppearance();
-      syncPlanBadge();
-      return result;
-    };
-  }
+  vuneRenderAllHooks.push(function(){
+    stableAppearance();
+    syncPlanBadge();
+  });
 
   /* Final beta plan setter: one source of truth, with immediate home-badge synchronization. */
   async function setBetaPlanAndSync(plan){
