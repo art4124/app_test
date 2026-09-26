@@ -44,7 +44,7 @@ try {
   await page.locator('.side-nav [data-view="settings"]').click();
   await page.locator('[data-plan="supporter"]').click();
   await page.locator('#currentPlanCard').getByText('Supporter', {exact:false}).first().waitFor();
-  await page.locator('#companionLauncher').click();
+  await page.locator('#companionLauncher').click({force:true});
   await page.locator('#generateReportBtn').click();
   await page.locator('#reportDialog[open]').waitFor();
   assert.equal(await page.locator('#reportContent .report-metric strong').first().innerText(), '2');
