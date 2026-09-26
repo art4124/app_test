@@ -54,7 +54,10 @@ try {
   await page.locator('.side-nav [data-view="journal"]').click();
   await page.locator('#journalText').fill('A fictional note for the browser test.');
   await page.locator('#journalForm button[type=submit]').click();
-  await page.getByText('A fictional note for the browser test.', {exact:false}).first().waitFor();
+  await page.locator('#view-journal .journal-view-all').click();
+  const savedNote = page.locator('#view-journal-entries .journal-history-text').first();
+  await savedNote.waitFor();
+  assert.equal(await savedNote.innerText(), 'A fictional note for the browser test.');
 
   await page.locator('#lockNowBtn').click();
   await page.locator('#unlockPasscode').fill('FictionalPasscode-123');
