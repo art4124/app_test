@@ -21,7 +21,7 @@ A privacy-first, local-only web prototype for testing the Vune period tracker be
 - Offline-capable PWA app shell
 - No ad SDKs, analytics SDKs, external AI calls, or health-data backend
 
-GitHub Actions checks the final cycle calculations and runs a Chromium test of vault setup, check-ins, journal, Health Summary, passcode rotation, and Recovery Key restoration before Pages deployment.
+GitHub Actions checks the final cycle calculations and runs a Chromium test of vault setup, check-ins, journal, Health Summary, passcode rotation, and Recovery Key restoration. The custom Pages workflow waits for validation. GitHub's built-in Pages branch build can also run independently if the repository's Pages source is configured for branch publishing.
 
 ## Future product ideas
 
