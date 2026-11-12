@@ -1,79 +1,79 @@
-# Vune — Web Testing Prototype
+# Vune — Privacy-First Period Tracker (Web Prototype)
 
-A privacy-first, local-only web prototype for testing the Vune period tracker before the native iOS/TestFlight phase.
+**Status:** Functional browser-testing prototype, **not a production or clinical app**. This repository is currently named `app_test`; the product name is **Vune**.
 
-## What is implemented
+**Browser prototype:** https://art4124.github.io/app_test/
 
-- Encrypted local vault using Web Crypto (AES-GCM + PBKDF2-derived key)
-- Passcode lock and inactivity auto-lock
-- Privacy curtain when the tab is hidden, with optional immediate background lock
-- Daily period / flow / mood / symptom check-ins
-- Multiple check-ins on the same date with individual history
-- Local cycle-length calculations and next-period estimate
-- Calendar history and predicted dates
-- Encrypted journal
-- Local insights for cycles, symptoms, and moods
-- Supporter-plan simulation
-- Local Vune Assistant UX prototype (rule-based, no network calls)
-- Supporter Health Summary with Print / Save as PDF
-- Encrypted Recovery Key backup and local restoration
-- Plan-preview controls for Free, Essential, Plus, Complete, and Supporter
-- Offline-capable PWA app shell
-- No ad SDKs, analytics SDKs, external AI calls, or health-data backend
+> **Testing only:** Use fictional information. This build is not medical advice, is not a substitute for clinical software, and should not be used for real patient records. Security features described below are implemented in a prototype, not independently audited or certified.
 
-GitHub Actions checks the final cycle calculations and runs a Chromium test of vault setup, check-ins, journal, Health Summary, passcode rotation, and Recovery Key restoration. The custom Pages workflow waits for validation. GitHub's built-in Pages branch build can also run independently if the repository's Pages source is configured for branch publishing.
+## What Vune demonstrates
 
-## Future product ideas
+A local-first cycle and wellness-tracking experience, with deliberate attention to privacy, visual consistency, and iterative QA.
 
-- Vune Garden — a gentle plant-growth experience tied to check-ins may be reconsidered in a future update after the core tracker is stable. It is not part of the current beta.
+**Prototype features implemented:**
 
-## Testing safety
+- Encrypted local vault using Web Crypto (AES-GCM and PBKDF2-derived key).
+- Passcode and inactivity auto-lock, with privacy masking in the tab background.
+- Period, flow, mood, and symptom check-ins, including multiple entries per day.
+- Cycle history, calendar, period forecasts, and locally calculated patterns.
+- Encrypted personal journal (Bloom Notes).
+- Browser-based insights for cycle, symptom, and mood history.
+- Simulated subscription/plan preview, local rule-based assistant experience, and supporter health-summary export.
+- Recovery Key backup and local restoration.
+- Offline-capable progressive web app shell.
+- No advertising/analytics SDKs, external AI requests, or health-data backend in this browser prototype.
 
-**Use fictional health information in the web prototype.**
+## Known issue — consent must not be bypassed
 
-The browser build validates the product experience and local-encryption flow. It is not a substitute for the final iOS architecture using Keychain, native authentication, native storage protections, and the planned security review.
+[Issue #5: Opening Terms & Conditions bypasses the required agreement](https://github.com/art4124/app_test/issues/5) was reported by a user and is **not yet confirmed fixed**.
 
-The browser vault and local recovery copy are both rewritten when data changes. Reusing the recovery key derivation and one serialized snapshot reduces repeated work, but very large journals or histories may still reach browser storage limits. A production storage redesign needs a separately tested migration.
+**Expected behavior:** Reading the terms must never be treated as agreeing to them. Continuing must require a separate affirmative consent action. The onboarding/consent flow needs a regression test before the prototype is presented as release-ready.
 
-## Run locally
+## Quick start
 
-Because Web Crypto requires a secure context, use HTTPS or localhost rather than opening index.html directly from the filesystem.
+Run on HTTPS or `localhost` because the Web Crypto API requires a secure context.
 
-With Python:
+```sh
+python3 -m http.server 8000
+```
 
-    python -m http.server 8080
+Open http://localhost:8000/. You can also use a local static server such as `npx serve .`.
 
-Then open:
+## Automated checks
 
-    http://localhost:8080
+```sh
+npm ci
+npx playwright install chromium
+npm run test:browser
+```
 
-With Node:
+See `tests/browser-smoke.mjs` for browser-based coverage and `tests/runtime-logic.mjs` for selected runtime logic checks. The validation workflows run in GitHub Actions; their passing does **not** establish that the consent bug or all security concerns are solved.
 
-    npx serve .
+## Repository guide
 
-## Hosting
+| Path | Purpose |
+| --- | --- |
+| `index.html` | Main application shell and screens |
+| `vune-runtime.js` | Main client-side application behavior |
+| `vune.css` | Responsive UI and visual design |
+| `terms.html`, `privacy.html` | Terms and privacy information |
+| `public-theme.js`, `service-worker.js` | Shared visual settings and offline shell |
+| `manifest.webmanifest`, `icon.svg` | Installable web-app metadata and icon |
+| `audit-check.mjs`, `tests/` | Validation scripts and tests |
+| `.github/workflows/` | Automated validation and deployment |
+| `SECURITY.md` | Security design, limitations, and reporting |
+| `package.json`, `package-lock.json` | Test dependencies |
 
-The site is static and can be hosted with GitHub Pages once Pages is enabled for the repository. A Pages workflow is included.
+Keeping this compact static web prototype at the root preserves existing relative paths. Refactoring into `src/` or `public/` should happen only with a matching deployment and regression-test update.
 
-For a private repository, GitHub plan limitations may affect Pages availability. Keeping the source private is preferred while Vune is in product-development testing.
+## Security boundaries and roadmap
 
-## Security design notes
+The local encrypted browser vault is not equivalent to a production native-iOS architecture. A future native implementation may use Keychain, device authentication, secure local storage, native backup handling, and StoreKit entitlements; those are **targets**, not features of this browser build.
 
-See SECURITY.md and privacy.html.
+See [SECURITY.md](SECURITY.md) for fuller limitations. The browser's local recovery and vault data can still be affected by device access, browser storage behavior, and an untested migration. Always test with fictional data.
 
-## Native mapping
+## My role
 
-| Web prototype | Native iOS target |
-|---|---|
-| Browser passcode-derived key | Keychain-protected application key |
-| Browser localStorage ciphertext | Encrypted native application database |
-| Privacy curtain | Native app-switcher privacy protection |
-| Manual passcode | Face ID / device authentication |
-| Encrypted JSON backup | Optional encrypted iCloud/CloudKit sync |
-| Rule-based local Assistant | On-device model where supported |
-| Browser print-to-PDF | Native local Health Summary generation |
-| Plan simulation | StoreKit subscription entitlements |
+I directed product requirements, user experience, feature priorities, privacy decisions, reproduction of bugs, and iterative testing with AI-assisted implementation support. This description is not a claim to have independently written or security-audited every component.
 
-## Status
-
-Prototype only. Not medical advice and not intended for real patient records.
+**Repository visibility:** This source repository is public. The app is under development and should not be treated as a published health product. No general reuse license is granted by this README.
