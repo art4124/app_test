@@ -14,7 +14,7 @@ A local-first cycle and wellness-tracking experience, with deliberate attention 
 
 - Encrypted local vault using Web Crypto (AES-GCM and PBKDF2-derived key).
 - Passcode and inactivity auto-lock, with privacy masking in the tab background.
-- Period, flow, mood, and symptom check-ins, including multiple entries per day.
+- **Multiple check-ins on the same date:** period, flow, mood, and symptom entries are retained individually in daily history.
 - Cycle history, calendar, period forecasts, and locally calculated patterns.
 - Encrypted personal journal (Bloom Notes).
 - Browser-based insights for cycle, symptom, and mood history.
